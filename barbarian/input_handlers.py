@@ -10,6 +10,7 @@ import actions
 from actions import (
     Action,
     BumpAction,
+    DialogueAction,
     PickupAction,
     WaitAction,
 )
@@ -525,14 +526,23 @@ class MainGameEventHandler(EventHandler):
 
         player = self.engine.player
 
-        if key == tcod.event.K_PERIOD and modifier & (
+        if key in MOVE_KEYS:
+            dx,dy = MOVE_KEYS[key]
+            action = BumpAction(player, dx, dy)
+        elif key == tcod.event.K_PERIOD and modifier & (
             tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT
         ):
             return actions.TakeStairsAction(player)
 
-        if key in MOVE_KEYS:
-            dx, dy = MOVE_KEYS[key]
-            action = BumpAction(player, dx, dy)
+        elif key == tcod.event.K_t:  # Talk key
+            return SingleRangedAttackHandler(
+                self.engine,
+                callback=lambda xy: DialogueAction(
+                    self.engine.player,
+                    xy[0] - self.engine.player.x,
+                    xy[1] - self.engine.player.y,
+                )
+            )
         elif key in WAIT_KEYS:
             action = WaitAction(player)
 

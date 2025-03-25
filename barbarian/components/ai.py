@@ -71,6 +71,93 @@ class HostileEnemy(BaseAI):
 
         return WaitAction(self.entity).perform()
 
+class Player(BaseAI):
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+        self.path: List[Tuple[int, int]] = []
+
+    def perform(self) -> None:
+        target = self.engine.player
+        dx = target.x - self.entity.x
+        dy = target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance.
+
+        if self.engine.game_map.visible[self.entity.x, self.entity.y]:
+            if distance <= 1:
+                return MeleeAction(self.entity, dx, dy).perform()
+
+            self.path = self.get_path_to(target.x, target.y)
+
+        if self.path:
+            dest_x, dest_y = self.path.pop(0)
+            return MovementAction(
+                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+            ).perform()
+
+class FriendlyNPC(BaseAI):
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+        self.path: List[Tuple[int, int]] = []
+        self.in_party = False
+        self.current_target = None
+
+    def toggle_party_membership(self) -> None:
+        """Переключает статус членства NPC в группе"""
+        self.in_party = not self.in_party
+        if self.in_party:
+            self.engine.message_log.add_message(
+                f"{self.entity.name} присоединяется к вашей группе."
+            )
+        else:
+            self.engine.message_log.add_message(
+                f"{self.entity.name} покидает вашу группу."
+            )
+
+    def perform(self) -> None:
+        if not self.in_party:
+            # Если NPC не в группе, просто стоит на месте
+            return WaitAction(self.entity).perform()
+        # Поиск ближайшего врага
+        closest_enemy = None
+        closest_distance = float('inf')
+        
+        for actor in self.engine.game_map.actors:
+            if actor.ai and isinstance(actor.ai, HostileEnemy):
+                distance = self.entity.distance(actor.x, actor.y)
+                if distance < closest_distance:
+                    closest_enemy = actor
+                    closest_distance = distance
+                    
+        # Если есть враг поблизости
+        if closest_enemy and closest_distance <= 8:  # Радиус обнаружения
+            self.current_target = closest_enemy
+            
+            if closest_distance <= 1:  # Если враг рядом - атакуем
+                dx = closest_enemy.x - self.entity.x
+                dy = closest_enemy.y - self.entity.y
+                return MeleeAction(self.entity, dx, dy).perform()
+            else:  # Иначе двигаемся к врагу
+                self.path = self.get_path_to(closest_enemy.x, closest_enemy.y)
+                if self.path:
+                    dest_x, dest_y = self.path.pop(0)
+                    return MovementAction(
+                        self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                    ).perform()
+                    
+        # Если нет врагов - следуем за игроком
+        target = self.engine.player
+        dx = target.x - self.entity.x
+        dy = target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))
+        if distance > 3:  # Держим дистанцию в 3 клетки
+            self.path = self.get_path_to(target.x, target.y)
+            if self.path:
+                dest_x, dest_y = self.path.pop(0)
+                return MovementAction(
+                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                ).perform()
+        return WaitAction(self.entity).perform()
+
 
 class ConfusedEnemy(BaseAI):
     """

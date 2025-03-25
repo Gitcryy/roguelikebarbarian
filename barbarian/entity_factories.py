@@ -1,4 +1,4 @@
-from components.ai import HostileEnemy
+from components.ai import HostileEnemy, FriendlyNPC, Player
 from components import consumable, equippable
 from components.equipment import Equipment
 from components.fighter import Fighter
@@ -11,11 +11,21 @@ player = Actor(
     char="@",
     color=(255, 255, 255),
     name="Player",
-    ai_cls=HostileEnemy,
+    ai_cls=Player,
     equipment=Equipment(),
     fighter=Fighter(hp=30, base_defense=1485, base_power=2451),
     inventory=Inventory(capacity=26),
     level=Level(level_up_base=200),
+)
+npc = Actor(
+    char="@",
+    color=(173, 255, 47),
+    name="NPC",
+    ai_cls=FriendlyNPC,
+    equipment=Equipment(),
+    fighter=Fighter(hp=30, base_defense=1, base_power=2),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=35),
 )
 
 orc = Actor(

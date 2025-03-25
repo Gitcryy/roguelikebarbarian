@@ -16,8 +16,6 @@ from game_map import GameWorld
 import input_handlers
 
 
-# Load the background image and remove the alpha channel.
-background_image = tcod.image.load("menu_background.png")[:, :, :3]
 
 
 def new_game() -> Engine:
@@ -77,7 +75,6 @@ class MainMenu(input_handlers.BaseEventHandler):
 
     def on_render(self, console: tcod.Console) -> None:
         """Render the main menu on a background image."""
-        console.draw_semigraphics(background_image, 0, 0)
 
         console.print(
             console.width // 2,

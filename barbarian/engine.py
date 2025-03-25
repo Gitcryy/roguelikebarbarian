@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from tcod.console import Console
 from tcod.map import compute_fov
-
+from components.ai import FriendlyNPC
 import exceptions
 from message_log import MessageLog
 import render_functions

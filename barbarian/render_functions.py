@@ -26,7 +26,9 @@ def render_bar(
 ) -> None:
     bar_width = int(float(current_value) / maximum_value * total_width)
 
-    console.draw_rect(x=0, y=45, width=20, height=1, ch=1, bg=color.bar_empty)
+# Проверяем, не выходят ли координаты за пределы консоли
+    if console.width < 20 or console.height < 46:
+        return
 
     if bar_width > 0:
         console.draw_rect(
