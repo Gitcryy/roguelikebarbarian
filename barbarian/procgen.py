@@ -34,7 +34,8 @@ item_chances: Dict[int, List[Tuple[Entity, int]]] = {
 }
 
 enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(entity_factories.npc, 50)],
+    0: [(entity_factories.npc, 15)],
+    0: [(entity_factories.orc, 20)],
     3: [(entity_factories.troll, 15)],
     5: [(entity_factories.troll, 30)],
     5: [(entity_factories.boss, 30)],
@@ -219,8 +220,12 @@ def generate_dungeon(
         x, y = find_valid_position()
         entity.spawn(dungeon, x, y)
     # Размещаем лестницу в проходимой области
+# Place two down stairs in different locations
     for _ in range(2):
         stairs_x, stairs_y = find_valid_position()
+        # Ensure the second stairs is not placed at the same location as the first
+        while any(loc == (stairs_x, stairs_y) for loc in dungeon.downstairs_locations):
+            stairs_x, stairs_y = find_valid_position()
         dungeon.tiles[stairs_x, stairs_y] = tile_types.down_stairs
-        dungeon.downstairs_location = (stairs_x, stairs_y)
+        dungeon.downstairs_locations.append((stairs_x, stairs_y))
     return dungeon
