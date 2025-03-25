@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING
-
+import numpy as np 
 import tcod
 
 import entity_factories
@@ -16,14 +16,14 @@ if TYPE_CHECKING:
 
 
 max_items_by_floor = [
-    (1, 1),
-    (4, 2),
+    (1, 10),
+    (4, 15),
 ]
 
 max_monsters_by_floor = [
-    (1, 2),
-    (4, 3),
-    (6, 5),
+    (1, 20),
+    (4, 30),
+    (6, 50),
 ]
 
 item_chances: Dict[int, List[Tuple[Entity, int]]] = {
@@ -34,11 +34,12 @@ item_chances: Dict[int, List[Tuple[Entity, int]]] = {
 }
 
 enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(entity_factories.orc, 80)],
-    0: [(entity_factories.boss, 160)],
+    0: [(entity_factories.npc, 50)],
     3: [(entity_factories.troll, 15)],
     5: [(entity_factories.troll, 30)],
+    5: [(entity_factories.boss, 30)],
     7: [(entity_factories.troll, 60)],
+    7: [(entity_factories.boss, 60)],
 }
 
 
@@ -166,45 +167,60 @@ def generate_dungeon(
     """Generate a new dungeon map."""
     player = engine.player
     dungeon = GameMap(engine, map_width, map_height, entities=[player])
-
-    rooms: List[RectangularRoom] = []
-
-    center_of_last_room = (0, 0)
-
-    for r in range(max_rooms):
-        room_width = random.randint(room_min_size, room_max_size)
-        room_height = random.randint(room_min_size, room_max_size)
-
-        x = random.randint(0, dungeon.width - room_width - 1)
-        y = random.randint(0, dungeon.height - room_height - 1)
-
-        # "RectangularRoom" class makes rectangles easier to work with
-        new_room = RectangularRoom(x, y, room_width, room_height)
-
-        # Run through the other rooms and see if they intersect with this one.
-        if any(new_room.intersects(other_room) for other_room in rooms):
-            continue  # This room intersects, so go to the next attempt.
-        # If there are no intersections then the room is valid.
-
-        # Dig out this rooms inner area.
-        dungeon.tiles[new_room.inner] = tile_types.floor
-
-        if len(rooms) == 0:
-            # The first room, where the player starts.
-            player.place(*new_room.center, dungeon)
-        else:  # All rooms after the first.
-            # Dig out a tunnel between this room and the previous one.
-            for x, y in tunnel_between(rooms[-1].center, new_room.center):
-                dungeon.tiles[x, y] = tile_types.floor
-
-            center_of_last_room = new_room.center
-
-        place_entities(new_room, dungeon, engine.game_world.current_floor)
-
-        dungeon.tiles[center_of_last_room] = tile_types.down_stairs
-        dungeon.downstairs_location = center_of_last_room
-
-        # Finally, append the new room to the list.
-        rooms.append(new_room)
-
+    # Генерируем базовую карту используя шум Перлина
+    noise = np.random.random((map_width, map_height))
+    threshold = 0.40  # Увеличенный порог для создания более открытых пространств
+    
+    dungeon.tiles[...] = np.where(
+        noise > threshold,
+        tile_types.floor,
+        tile_types.wall
+    )
+    # Выполняем несколько итераций сглаживания для создания более естественных пещер
+    for _ in range(3):
+        new_tiles = dungeon.tiles.copy()
+        for x in range(1, map_width - 1):
+            for y in range(1, map_height - 1):
+                # Подсчитываем количество стен вокруг текущей клетки
+                walls = sum(1 for dx in [-1,0,1] for dy in [-1,0,1]
+                          if dungeon.tiles[x+dx, y+dy] == tile_types.wall)
+                
+                # Применяем правила клеточного автомата
+                if walls >= 5:
+                    new_tiles[x,y] = tile_types.wall
+                elif walls <= 3:
+                    new_tiles[x,y] = tile_types.floor
+                
+        dungeon.tiles = new_tiles
+    # Гарантируем наличие проходимого пути от входа к выходу
+    def find_valid_position():
+        while True:
+            x = random.randint(1, map_width - 2)
+            y = random.randint(1, map_height - 2)
+            if dungeon.tiles[x, y] == tile_types.floor:
+                return x, y
+    # Размещаем игрока в проходимой области
+    player_x, player_y = find_valid_position()
+    player.place(player_x, player_y, dungeon)
+    # Размещаем сущности
+    number_of_monsters = random.randint(
+        5, get_max_value_for_floor(max_monsters_by_floor, engine.game_world.current_floor)
+    )
+    number_of_items = random.randint(
+        5, get_max_value_for_floor(max_items_by_floor, engine.game_world.current_floor)
+    )
+    monsters = get_entities_at_random(
+        enemy_chances, number_of_monsters, engine.game_world.current_floor
+    )
+    items = get_entities_at_random(
+        item_chances, number_of_items, engine.game_world.current_floor
+    )
+    for entity in monsters + items:
+        x, y = find_valid_position()
+        entity.spawn(dungeon, x, y)
+    # Размещаем лестницу в проходимой области
+    for _ in range(2):
+        stairs_x, stairs_y = find_valid_position()
+        dungeon.tiles[stairs_x, stairs_y] = tile_types.down_stairs
+        dungeon.downstairs_location = (stairs_x, stairs_y)
     return dungeon

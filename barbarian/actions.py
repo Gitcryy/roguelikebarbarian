@@ -1,10 +1,7 @@
 from __future__ import annotations
-
 from typing import Optional, Tuple, TYPE_CHECKING
-
 import color
 import exceptions
-
 if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity, Item
@@ -191,3 +188,18 @@ class BumpAction(ActionWithDirection):
 
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()
+
+class DialogueAction(ActionWithDirection):
+    def perform(self) -> None:
+        from components.ai import FriendlyNPC
+        dest_x, dest_y = self.dest_xy
+        
+        # Check if target location is within one tile range
+        if abs(self.entity.x - dest_x) > 1 or abs(self.entity.y - dest_y) > 1:
+            raise exceptions.Impossible("That NPC is too far away to talk to.")
+            
+        target = self.target_actor
+        if target and isinstance(target.ai, FriendlyNPC):
+            target.ai.toggle_party_membership()
+        else:
+            raise exceptions.Impossible("You can only talk to friendly NPCs nearby.")
