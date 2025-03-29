@@ -34,13 +34,10 @@ item_chances: Dict[int, List[Tuple[Entity, int]]] = {
 }
 
 enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(entity_factories.npc, 15)],
-    0: [(entity_factories.orc, 20)],
+    0: [(entity_factories.npc, 25), (entity_factories.orc, 20)],
     3: [(entity_factories.troll, 15)],
-    5: [(entity_factories.troll, 30)],
-    5: [(entity_factories.boss, 30)],
-    7: [(entity_factories.troll, 60)],
-    7: [(entity_factories.boss, 60)],
+    5: [(entity_factories.troll, 30),(entity_factories.boss, 30)],
+    7: [(entity_factories.troll, 60),(entity_factories.boss, 60)],
 }
 
 
@@ -204,6 +201,17 @@ def generate_dungeon(
     player_x, player_y = find_valid_position()
     player.place(player_x, player_y, dungeon)
     # Размещаем сущности
+    if hasattr(engine, "game_map") and engine.game_map:
+        for entity in engine.game_map.actors:
+            if hasattr(entity, "ai") and hasattr(entity.ai, "in_party") and entity.ai.in_party:
+                # Находим случайную проходимую позицию рядом с игроком
+                for _ in range(10):  # Пробуем 10 раз найти подходящую позицию
+                    dx = random.randint(-2, 2)
+                    dy = random.randint(-2, 2)
+                    new_x, new_y = player_x + dx, player_y + dy
+                    if dungeon.tiles[new_x, new_y]["walkable"]:
+                        entity.spawn(dungeon, new_x, new_y)
+                        break
     number_of_monsters = random.randint(
         5, get_max_value_for_floor(max_monsters_by_floor, engine.game_world.current_floor)
     )

@@ -50,25 +50,63 @@ class HostileEnemy(BaseAI):
     def __init__(self, entity: Actor):
         super().__init__(entity)
         self.path: List[Tuple[int, int]] = []
+        self.aggression_config = {
+            "player": 1.0,  # Полная агрессия к игроку
+            "friendly_npc": 0.5,  # Половинная агрессия к NPC
+            "hostile_enemy": 0.0,  # Нет агрессии к другим врагам
+        }
 
+    def set_aggression(self, target_type: str, value: float) -> None:
+        """Установить уровень агрессии к определенному типу целей"""
+        if value < 0.0 or value > 1.0:
+            raise ValueError("Уровень агрессии должен быть между 0.0 и 1.0")
+        self.aggression_config[target_type] = value
+
+    def get_target_aggression(self, target: Actor) -> float:
+        """Получить уровень агрессии к конкретной цели"""
+        if target is self.engine.player:
+            return self.aggression_config["player"]
+        elif isinstance(target.ai, FriendlyNPC):
+            return self.aggression_config["friendly_npc"]
+        elif isinstance(target.ai, HostileEnemy):
+            return self.aggression_config["hostile_enemy"]
+        return 0.0
+    
     def perform(self) -> None:
-        target = self.engine.player
-        dx = target.x - self.entity.x
-        dy = target.y - self.entity.y
-        distance = max(abs(dx), abs(dy))  # Chebyshev distance.
-
+        # Поиск ближайшей цели с учетом агрессии
+        closest_target = None
+        closest_distance = float('inf')
+        
+        # Проверяем всех акторов
+        for actor in self.engine.game_map.actors:
+            if actor is self.entity:
+                continue
+                
+            aggression = self.get_target_aggression(actor)
+            if aggression <= 0:
+                continue
+                
+            distance = self.entity.distance(actor.x, actor.y)
+            # Учитываем агрессию при расчете эффективного расстояния
+            effective_distance = distance / aggression
+            
+            if effective_distance < closest_distance:
+                closest_target = actor
+                closest_distance = effective_distance
+        if not closest_target:
+            return WaitAction(self.entity).perform()
+        dx = closest_target.x - self.entity.x
+        dy = closest_target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))
         if self.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
                 return MeleeAction(self.entity, dx, dy).perform()
-
-            self.path = self.get_path_to(target.x, target.y)
-
+            self.path = self.get_path_to(closest_target.x, closest_target.y)
         if self.path:
             dest_x, dest_y = self.path.pop(0)
             return MovementAction(
                 self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
             ).perform()
-
         return WaitAction(self.entity).perform()
 
 class Player(BaseAI):
