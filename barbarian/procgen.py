@@ -4,7 +4,7 @@ import random
 from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING
 import numpy as np 
 import tcod
-
+import copy
 import entity_factories
 from game_map import GameMap
 import tile_types
@@ -167,7 +167,7 @@ def generate_dungeon(
     dungeon = GameMap(engine, map_width, map_height, entities=[player])
     # Генерируем базовую карту используя шум Перлина
     noise = np.random.random((map_width, map_height))
-    threshold = 0.40  # Увеличенный порог для создания более открытых пространств
+    threshold = 0.40 
     
     dungeon.tiles[...] = np.where(
         noise > threshold,
@@ -237,3 +237,83 @@ def generate_dungeon(
         dungeon.tiles[stairs_x, stairs_y] = tile_types.down_stairs
         dungeon.downstairs_locations.append((stairs_x, stairs_y))
     return dungeon
+
+def generate_city(
+    max_rooms: int,
+    room_min_size: int,
+    room_max_size: int,
+    map_width: int,
+    map_height: int,
+    engine: Engine,
+) -> GameMap:
+    """Generate a city map."""
+    player = engine.player
+    city = GameMap(engine, map_width, map_height, entities=[player])
+    
+    # Заполняем карту полом
+    city.tiles[...] = tile_types.floor
+    
+    # Создаем стены по периметру
+    city.tiles[0:map_width, 0] = tile_types.wall
+    city.tiles[0:map_width, map_height-1] = tile_types.wall
+    city.tiles[0, 0:map_height] = tile_types.wall
+    city.tiles[map_width-1, 0:map_height] = tile_types.wall
+    
+    # Создаем здания (комнаты)
+    rooms: List[RectangularRoom] = []
+    
+    for _ in range(max_rooms):
+        room_width = random.randint(room_min_size, room_max_size)
+        room_height = random.randint(room_min_size, room_max_size)
+        
+        x = random.randint(1, map_width - room_width - 1)
+        y = random.randint(1, map_height - room_height - 1)
+        
+        new_room = RectangularRoom(x, y, room_width, room_height)
+        center_x = map_width // 2
+        center_y = map_height // 2
+        city.tiles[center_x, center_y] = tile_types.portal_blue
+        
+        if any(new_room.intersects(other_room) for other_room in rooms):
+            continue
+            
+        # Создаем стены комнаты
+        city.tiles[new_room.x1:new_room.x2, new_room.y1] = tile_types.wall
+        city.tiles[new_room.x1:new_room.x2, new_room.y2-1] = tile_types.wall
+        city.tiles[new_room.x1, new_room.y1:new_room.y2] = tile_types.wall
+        city.tiles[new_room.x2-1, new_room.y1:new_room.y2] = tile_types.wall
+        
+        # Добавляем дверь в случайном месте на одной из стен
+        wall = random.randint(0, 3)  # Выбираем случайную стену
+        if wall == 0:  # Верхняя стена
+            door_x = random.randint(new_room.x1 + 1, new_room.x2 - 2)
+            city.tiles[door_x, new_room.y1] = tile_types.door
+        elif wall == 1:  # Нижняя стена
+            door_x = random.randint(new_room.x1 + 1, new_room.x2 - 2)
+            city.tiles[door_x, new_room.y2-1] = tile_types.door
+        elif wall == 2:  # Левая стена
+            door_y = random.randint(new_room.y1 + 1, new_room.y2 - 2)
+            city.tiles[new_room.x1, door_y] = tile_types.door
+        else:  # Правая стена
+            door_y = random.randint(new_room.y1 + 1, new_room.y2 - 2)
+            city.tiles[new_room.x2-1, door_y] = tile_types.door
+        rooms.append(new_room)
+    
+    # Размещаем игрока в первой комнате
+    if rooms:
+        player_x, player_y = rooms[0].center
+        player.place(player_x, player_y, city)
+        
+        # Добавляем лестницу в последней комнате
+        stairs_x, stairs_y = rooms[-1].center
+        city.tiles[stairs_x, stairs_y] = tile_types.down_stairs
+        city.downstairs_locations.append((stairs_x, stairs_y))
+    
+    # Размещаем NPC и предметы
+    for room in rooms[1:]:  # Пропускаем первую комнату
+        if random.random() < 0.7:  # 70% шанс появления NPC в комнате
+            x, y = room.center
+            npc = copy.deepcopy(entity_factories.npc)
+            npc.spawn(city, x, y)
+    
+    return city

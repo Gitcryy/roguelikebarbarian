@@ -25,6 +25,7 @@ class Engine:
         self.mouse_location = (0, 0)
         self.player = player
         self.tracked_monsters = set()  # Set to track killed monster types
+        self.move_counter = 0
         
     def handle_enemy_turns(self) -> None:
         for entity in set(self.game_map.actors) - {self.player}:

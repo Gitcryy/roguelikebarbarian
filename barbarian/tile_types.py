@@ -54,3 +54,27 @@ down_stairs = new_tile(
     dark=(ord(">"), (0, 0, 100), (50, 50, 150)),
     light=(ord(">"), (255, 255, 255), (200, 180, 50)),
 )
+city_wall = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("#"), (130, 110, 50), (0, 0, 100)),
+    light=(ord("#"), (130, 110, 50), (200, 180, 50)),
+)
+door = new_tile(
+    walkable=True,
+    transparent=False,
+    dark=(ord("+"), (0xE0, 0x64, 0x1E), (0x99, 0x45, 0x15)),
+    light=(ord("+"), (0xFF, 0x8C, 0x33), (0xCC, 0x5C, 0x1C)),
+)
+portal_blue = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("O"), (0, 0, 255), (0, 0, 100)),
+    light=(ord("O"), (0, 128, 255), (0, 0, 150)),
+)
+portal_red = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("O"), (255, 0, 0), (100, 0, 0)),
+    light=(ord("O"), (255, 128, 128), (150, 0, 0)),
+)
