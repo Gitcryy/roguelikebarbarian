@@ -3,6 +3,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 import color
 import exceptions
 import tile_types
+import random as r
 if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity, Item
@@ -141,12 +142,14 @@ class ActionWithDirection(Action):
 
 
 class MeleeAction(ActionWithDirection):
+
     def perform(self) -> None:
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
 
-        damage = self.entity.fighter.power - target.fighter.defense
+        damage = self.entity.fighter.power
+        dice = r.randint(1,20)
 
         attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
         if self.entity is self.engine.player:
@@ -154,16 +157,20 @@ class MeleeAction(ActionWithDirection):
         else:
             attack_color = color.enemy_atk
 
-        if damage > 0:
+        if dice == 20:
             self.engine.message_log.add_message(
-                f"{attack_desc} for {damage} hit points.", attack_color
+                f"{attack_desc} for crit {(damage*2)} hit points.[{dice}]", attack_color
+            )
+            target.fighter.hp -= (damage*2)
+        elif dice >= target.fighter.defense:
+            self.engine.message_log.add_message(
+                f"{attack_desc} for {damage} hit points.[{dice}]", attack_color
             )
             target.fighter.hp -= damage
         else:
             self.engine.message_log.add_message(
-                f"{attack_desc} but does no damage.", attack_color
+                f"{attack_desc} but does no damage.[{dice}]", attack_color
             )
-
 
 class MovementAction(ActionWithDirection):
     def perform(self) -> None:
@@ -195,7 +202,7 @@ class MovementAction(ActionWithDirection):
             else:
                 self.engine.portal_locations = []
             # Try to spawn new portal every 10 moves
-            if self.engine.move_counter >= 10:
+            if self.engine.move_counter >= 1000:
                 player_x, player_y = self.engine.player.x, self.engine.player.y
                 # Try to spawn portal 2 tiles to the right
                 portal_x = player_x + 2
