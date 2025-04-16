@@ -13,9 +13,9 @@ player = Actor(
     name="Player",
     ai_cls=Player,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=10, base_power=2),
+    fighter=Fighter(hp=30, base_defense=10, base_power=2, base_pen = 0),
     inventory=Inventory(capacity=26),
-    level=Level(level_up_base=200),
+    level=Level(level_up_base=100),
 )
 npc = Actor(
     char="@",
@@ -23,9 +23,9 @@ npc = Actor(
     name="NPC",
     ai_cls=FriendlyNPC,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=1, base_power=2),
+    fighter=Fighter(hp=30, base_defense=14, base_power=2, base_pen = 0),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=35),
+    level=Level(xp_given=350),
 )
 
 orc = Actor(
@@ -34,9 +34,9 @@ orc = Actor(
     name="Orc",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=10, base_defense=10, base_power=3),
+    fighter=Fighter(hp=10, base_defense=13, base_power=3, base_pen = 3),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=35),
+    level=Level(xp_given=350),
 )
 troll = Actor(
     char="T",
@@ -44,9 +44,9 @@ troll = Actor(
     name="Troll",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=16, base_defense=1, base_power=4),
+    fighter=Fighter(hp=16, base_defense=16, base_power=6, base_pen = 6),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=100),
+    level=Level(xp_given=1000),
 )
 boss = Actor(
     char="B",
@@ -54,9 +54,9 @@ boss = Actor(
     name="Boss",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=4, base_power=6),
+    fighter=Fighter(hp=30, base_defense=18, base_power=10, base_pen = 10),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=100),
+    level=Level(xp_given=1000),
 )
 
 confusion_scroll = Item(

@@ -149,6 +149,7 @@ class MeleeAction(ActionWithDirection):
             raise exceptions.Impossible("Nothing to attack.")
 
         damage = self.entity.fighter.power
+        pen = self.entity.fighter.pen
         dice = r.randint(1,20)
 
         attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
@@ -162,14 +163,14 @@ class MeleeAction(ActionWithDirection):
                 f"{attack_desc} for crit {(damage*2)} hit points.[{dice}]", attack_color
             )
             target.fighter.hp -= (damage*2)
-        elif dice >= target.fighter.defense:
+        elif dice + pen >= target.fighter.defense:
             self.engine.message_log.add_message(
-                f"{attack_desc} for {damage} hit points.[{dice}]", attack_color
+                f"{attack_desc} for {damage} hit points.[{dice} + {pen}]", attack_color
             )
             target.fighter.hp -= damage
         else:
             self.engine.message_log.add_message(
-                f"{attack_desc} but does no damage.[{dice}]", attack_color
+                f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
             )
 
 class MovementAction(ActionWithDirection):
