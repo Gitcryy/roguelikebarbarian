@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-
+from components.Dices import dices
 from components.base_component import BaseComponent
 from equipment_types import EquipmentType
 
@@ -19,12 +19,15 @@ class Equippable(BaseComponent):
         pen_bonus: int = 0,
         defense_bonus: int = 0,
     ):
+        
         self.equipment_type = equipment_type
-
         self.power_bonus = power_bonus
         self.defense_bonus = defense_bonus
         self.pen_bonus = pen_bonus
 
+@property
+def power_bonus(self) -> int:
+    return dices.roll(1,1)
 
 class Dagger(Equippable):
     def __init__(self) -> None:

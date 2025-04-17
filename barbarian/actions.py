@@ -3,11 +3,11 @@ from typing import Optional, Tuple, TYPE_CHECKING
 import color
 import exceptions
 import tile_types
-import random as r
+from components.Dices import dices
+from components import equipment
 if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity, Item
-
 
 class Action:
     def __init__(self, entity: Actor) -> None:
@@ -140,7 +140,6 @@ class ActionWithDirection(Action):
     def perform(self) -> None:
         raise NotImplementedError()
 
-
 class MeleeAction(ActionWithDirection):
 
     def perform(self) -> None:
@@ -150,7 +149,7 @@ class MeleeAction(ActionWithDirection):
 
         damage = self.entity.fighter.power
         pen = self.entity.fighter.pen
-        dice = r.randint(1,20)
+        dice = dices.roll(1,20)   
 
         attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
         if self.entity is self.engine.player:
