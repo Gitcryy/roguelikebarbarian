@@ -10,6 +10,8 @@ from components.ai import FriendlyNPC
 import exceptions
 from message_log import MessageLog
 import render_functions
+from components.Dices import dices
+
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -72,3 +74,4 @@ class Engine:
         save_data = lzma.compress(pickle.dumps(self))
         with open(filename, "wb") as f:
             f.write(save_data)
+

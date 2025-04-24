@@ -5,7 +5,7 @@ import os
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union
 
 import tcod
-
+from components.equippable import Equippable
 import actions
 from actions import (
     Action,
@@ -518,6 +518,7 @@ class AreaRangedAttackHandler(SelectIndexHandler):
 
 
 class MainGameEventHandler(EventHandler):
+    from components.equippable import Dagger,Sword, Equippable
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
 

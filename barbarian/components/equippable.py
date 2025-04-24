@@ -1,9 +1,9 @@
 from __future__ import annotations
-
+import random as r
 from typing import TYPE_CHECKING
-from components.Dices import dices
 from components.base_component import BaseComponent
 from equipment_types import EquipmentType
+from actions import MeleeAction
 
 if TYPE_CHECKING:
     from entity import Item
@@ -15,28 +15,30 @@ class Equippable(BaseComponent):
     def __init__(
         self,
         equipment_type: EquipmentType,
-        power_bonus: int = 0,
+        power_min:int = 0,
+        power_max:int=0,
         pen_bonus: int = 0,
         defense_bonus: int = 0,
     ):
-        
+        self.power_min = power_min
+        self.power_max = power_max
         self.equipment_type = equipment_type
-        self.power_bonus = power_bonus
         self.defense_bonus = defense_bonus
         self.pen_bonus = pen_bonus
 
-@property
-def power_bonus(self) -> int:
-    return dices.roll(1,1)
+    def get_power_bonus(self) -> int:
+        """Returns a random power bonus based on power_min and power_max."""
+        return r.randint(self.power_min, self.power_max)
 
-class Dagger(Equippable):
+
+class Dagger(Equippable):   
     def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=2, pen_bonus=2)
+        super().__init__(equipment_type=EquipmentType.WEAPON,power_min = 1, power_max=2, pen_bonus=2)
 
 
 class Sword(Equippable):
     def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=4, pen_bonus=4) 
+        super().__init__(equipment_type=EquipmentType.WEAPON,power_min = 1, power_max=4, pen_bonus=4) 
 
 
 class LeatherArmor(Equippable):

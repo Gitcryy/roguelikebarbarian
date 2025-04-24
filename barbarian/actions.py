@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity, Item
 
+
 class Action:
     def __init__(self, entity: Actor) -> None:
         super().__init__()
@@ -147,7 +148,11 @@ class MeleeAction(ActionWithDirection):
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
 
-        damage = self.entity.fighter.power
+        if self.entity.equipment and self.entity.equipment.weapon and self.entity.equipment.weapon.equippable:
+            power_bonus = self.entity.equipment.weapon.equippable.get_power_bonus() # Получаем случайный бонус из оружия
+        else:
+            power_bonus = 0 #Если нет оружия, нет бонуса
+        damage = self.entity.fighter.power + power_bonus
         pen = self.entity.fighter.pen
         dice = dices.roll(1,20)   
 
@@ -223,8 +228,7 @@ class MovementAction(ActionWithDirection):
                     self.engine.message_log.add_message(
                         "A mysterious red portal appears nearby!", color.red
                     )
-
-
+                    
         if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_blue:
             self.engine.game_world.current_floor = 1  # Set to first dungeon floor
             self.engine.game_world.generate_floor()

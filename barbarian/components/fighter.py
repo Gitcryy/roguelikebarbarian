@@ -36,7 +36,7 @@ class Fighter(BaseComponent):
 
     @property
     def power(self) -> int:
-        return self.base_power + self.power_bonus
+        return self.base_power
 
     @property
     def defense_bonus(self) -> int:
