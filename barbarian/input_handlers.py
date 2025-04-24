@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 import os
-
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union
-
 import tcod
-from components.equippable import Equippable
 import actions
 from actions import (
     Action,
@@ -16,7 +13,6 @@ from actions import (
 )
 import color
 import exceptions
-
 if TYPE_CHECKING:
     from engine import Engine
     from entity import Item
@@ -210,7 +206,7 @@ class CharacterScreenEventHandler(AskUserEventHandler):
             x=x,
             y=y,
             width=width,
-            height=7,
+            height=8,
             title=self.TITLE,
             clear=True,
             fg=(255, 255, 255),
@@ -235,6 +231,9 @@ class CharacterScreenEventHandler(AskUserEventHandler):
         console.print(
             x=x + 1, y=y + 5, string=f"Defense: {self.engine.player.fighter.defense}"
         )
+        console.print(
+            x=x+1,y=y+6,string =f"Penetration: {self.engine.player.fighter.pen}"
+        )
 
 
 class LevelUpEventHandler(AskUserEventHandler):
@@ -252,7 +251,7 @@ class LevelUpEventHandler(AskUserEventHandler):
             x=x,
             y=0,
             width=35,
-            height=8,
+            height=9,
             title=self.TITLE,
             clear=True,
             fg=(255, 255, 255),
@@ -277,19 +276,26 @@ class LevelUpEventHandler(AskUserEventHandler):
             y=6,
             string=f"c) Agility (+1 defense, from {self.engine.player.fighter.defense})",
         )
+        console.print(
+            x=x +1,
+            y=7,
+            string=f"d) Penetration (+1 pen, from {self.engine.player.fighter.pen})",
+        )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         player = self.engine.player
         key = event.sym
         index = key - tcod.event.K_a
 
-        if 0 <= index <= 2:
+        if 0 <= index <= 3:
             if index == 0:
                 player.level.increase_max_hp()
             elif index == 1:
                 player.level.increase_power()
-            else:
+            elif index == 2:
                 player.level.increase_defense()
+            elif index == 3:
+                player.level.increase_penetration()
         else:
             self.engine.message_log.add_message("Invalid entry.", color.invalid)
 
@@ -518,7 +524,6 @@ class AreaRangedAttackHandler(SelectIndexHandler):
 
 
 class MainGameEventHandler(EventHandler):
-    from components.equippable import Dagger,Sword, Equippable
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
 

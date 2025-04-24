@@ -75,9 +75,10 @@ class ConfusionConsumable(Consumable):
 
 
 class FireballDamageConsumable(Consumable):
-    def __init__(self, damage: int, radius: int):
+    def __init__(self, damage: int, radius: int,):
         self.damage = damage
         self.radius = radius
+        
 
     def get_action(self, consumer: Actor) -> AreaRangedAttackHandler:
         self.engine.message_log.add_message(

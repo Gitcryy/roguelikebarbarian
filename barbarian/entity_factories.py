@@ -13,7 +13,7 @@ player = Actor(
     name="Player",
     ai_cls=Player,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=10, base_power=2, base_pen = 20),
+    fighter=Fighter(hp=30, base_defense=10, base_power=2, base_pen = 0),
     inventory=Inventory(capacity=26),
     level=Level(level_up_base=100),
 )
@@ -54,7 +54,7 @@ boss = Actor(
     name="Boss",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=18, base_power=10, base_pen = 20),
+    fighter=Fighter(hp=30, base_defense=18, base_power=10, base_pen = 10),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=1000),
 )

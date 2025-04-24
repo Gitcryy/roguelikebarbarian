@@ -72,3 +72,10 @@ class Level(BaseComponent):
         self.engine.message_log.add_message("Your movements are getting swifter!")
 
         self.increase_level()
+
+    def increase_penetration(self,amount:int = 1) -> None:
+        self.parent.fighter.base_pen +=amount
+
+        self.engine.message_log.add_message("Your eyes are better!")
+        
+        self.increase_level()
