@@ -15,7 +15,7 @@ player = Actor(
     equipment=Equipment(),
     fighter=Fighter(hp=30, base_defense=10, base_power=2, base_pen = 0),
     inventory=Inventory(capacity=26),
-    level=Level(level_up_base=100),
+    level=Level(level_up_base=5),
 )
 npc = Actor(
     char="@",
@@ -26,6 +26,49 @@ npc = Actor(
     fighter=Fighter(hp=30, base_defense=14, base_power=2, base_pen = 0),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=350),
+)
+
+"tier 9"
+gob = Actor(
+    char="g",
+    color=(112,255,93),
+    name="Goblin",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=6, base_defense=6, base_power=2, base_pen = 1),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=1),
+)
+gobf=Actor(
+    char="f",
+    color=(84,255,88),
+    name="Goblin Fighter",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=8, base_defense=6, base_power=3, base_pen = 2),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=1),
+)
+skel=Actor(
+    char="f",
+    color=(47,50,54),
+    name="Skeleton",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=1),
+)
+"tier 8"
+death=Actor(
+    char="f",
+    color=(192,128,129),
+    name="Death Fiend",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=20, base_defense=10, base_power=5, base_pen = 5),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=2),
 )
 
 orc = Actor(
@@ -81,7 +124,7 @@ lightning_scroll = Item(
     char="~",
     color=(255, 255, 0),
     name="Lightning Scroll",
-    consumable=consumable.LightningDamageConsumable(damage=20, maximum_range=5),
+    consumable=consumable.LightningDamageConsumable(damage=30, maximum_range=5, pen = 20),
 )
 
 dagger = Item(

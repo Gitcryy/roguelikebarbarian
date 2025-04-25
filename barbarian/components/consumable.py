@@ -135,9 +135,10 @@ class HealingConsumable(Consumable):
 
 
 class LightningDamageConsumable(Consumable):
-    def __init__(self, damage: int, maximum_range: int):
+    def __init__(self, damage: int, maximum_range: int,pen:int):
         self.damage = damage
         self.maximum_range = maximum_range
+        self.pen = pen
 
     def activate(self, action: actions.ItemAction) -> None:
         consumer = action.entity
@@ -153,10 +154,17 @@ class LightningDamageConsumable(Consumable):
                     closest_distance = distance
 
         if target:
-            self.engine.message_log.add_message(
-                f"A lighting bolt strikes the {target.name} with a loud thunder, for {self.damage} damage!"
-            )
-            target.fighter.take_damage(self.damage)
-            self.consume()
+            if self.pen >= actor.fighter.defense:   
+                self.engine.message_log.add_message(
+                    f"A lighting bolt strikes the {target.name} with a loud thunder, for {self.damage} damage!"
+                )
+                target.fighter.take_damage(self.damage)
+                self.consume()
+            else:
+                self.engine.message_log.add_message(
+                    f"A lighting bolt strikes the {target.name} with a loud thunder, for {self.damage//2} damage!"
+                )
+                target.fighter.take_damage(self.damage//2)
+                self.consume()
         else:
             raise Impossible("No enemy is close enough to strike.")
