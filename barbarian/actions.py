@@ -3,6 +3,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 import color
 import exceptions
 import tile_types
+from components.fighter import Fighter
 from components.Dices import dices
 from components import equipment
 if TYPE_CHECKING:
@@ -177,6 +178,7 @@ class MeleeAction(ActionWithDirection):
                 f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
             )
 
+    
 class MovementAction(ActionWithDirection):
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy
@@ -188,7 +190,8 @@ class MovementAction(ActionWithDirection):
         if self.entity is self.engine.player:
             # Increment move counter
             self.engine.move_counter += 1
-            
+            if self.engine.move_counter % 15 == 0:
+                self.entity.fighter.heal(1)
             # Check and update existing portals
             portals_to_remove = []
             if hasattr(self.engine, "portal_locations"):
@@ -290,6 +293,8 @@ class MovementAction(ActionWithDirection):
             # Destination is blocked by an entity.
             raise exceptions.Impossible("That way is blocked.")
         self.entity.move(self.dx, self.dy)
+
+
 
 class BumpAction(ActionWithDirection):
     def perform(self) -> None:

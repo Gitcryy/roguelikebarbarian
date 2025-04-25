@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import color
 from components.base_component import BaseComponent
 from render_order import RenderOrder
+import entity
 
 if TYPE_CHECKING:
     from entity import Actor

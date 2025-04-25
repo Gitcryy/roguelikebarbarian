@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
-
+import random as r
 import actions
 import color
 import components.ai
@@ -75,10 +75,10 @@ class ConfusionConsumable(Consumable):
 
 
 class FireballDamageConsumable(Consumable):
-    def __init__(self, damage: int, radius: int,):
+    def __init__(self, damage: int, radius: int,pen:int):
         self.damage = damage
         self.radius = radius
-        
+        self.pen = pen
 
     def get_action(self, consumer: Actor) -> AreaRangedAttackHandler:
         self.engine.message_log.add_message(
@@ -95,15 +95,21 @@ class FireballDamageConsumable(Consumable):
 
         if not self.engine.game_map.visible[target_xy]:
             raise Impossible("You cannot target an area that you cannot see.")
-
         targets_hit = False
         for actor in self.engine.game_map.actors:
             if actor.distance(*target_xy) <= self.radius:
-                self.engine.message_log.add_message(
-                    f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!"
-                )
-                actor.fighter.take_damage(self.damage)
-                targets_hit = True
+                if self.pen >= actor.fighter.defense:
+                    self.engine.message_log.add_message(
+                        f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!"
+                    )
+                    actor.fighter.take_damage(self.damage)
+                    targets_hit = True
+                else:
+                    self.engine.message_log.add_message(
+                        f"The {actor.name} is engulfed in a fiery explosion, but he takes it on him, taking {self.damage//2} damage!"
+                    )
+                    actor.fighter.take_damage(self.damage//2)
+                    targets_hit = True
 
         if not targets_hit:
             raise Impossible("There are no targets in the radius.")
