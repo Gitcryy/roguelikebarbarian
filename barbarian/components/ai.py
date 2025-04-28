@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np  # type: ignore
 import tcod
+import color
 
 from actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction
 
@@ -70,6 +71,8 @@ class HostileEnemy(BaseAI):
             return self.aggression_config["friendly_npc"]
         elif isinstance(target.ai, HostileEnemy):
             return self.aggression_config["hostile_enemy"]
+        elif isinstance(target.ai, HostileRanged):
+            return self.aggression_config["hostile_enemy"]
         return 0.0
     
     def perform(self) -> None:
@@ -108,6 +111,84 @@ class HostileEnemy(BaseAI):
                 self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
             ).perform()
         return WaitAction(self.entity).perform()
+
+class HostileRanged(HostileEnemy):
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+        self.target_entity = None
+        self.max_range = 6  # Максимальная дальность атаки
+        self.min_range = 3
+        self.cooldown = 0  # Текущее время перезарядки       
+        self.last_known_position: Optional[Tuple[int, int]] = None
+    
+    def get_path_to(self, dest_x: int, dest_y: int) -> List[Tuple[int, int]]:
+        """Compute and return a path to the target position.
+
+        If there is no valid path then returns an empty list.
+        """
+        cost = np.array(self.entity.gamemap.tiles["walkable"], dtype=np.int8)
+
+        for entity in self.entity.gamemap.entities:
+            # Check that an enitiy blocks movement and is not the AI itself.
+            if entity.blocks_movement and entity != self.entity:
+                # Modify the cost of all passable neighbor cells to convey blockage.
+                cost[entity.x, entity.y] += 10
+
+        # Create a graph from the cost array and pass that graph to a new pathfinder.
+        graph = tcod.path.SimpleGraph(cost=cost, cardinal=2, diagonal=3)
+        pathfinder = tcod.path.Pathfinder(graph)
+
+        pathfinder.add_root((self.entity.x, self.entity.y))  # Start position.
+
+        # Compute a path to the destination.
+        path: List[List[int]] = pathfinder.path_to((dest_x, dest_y))[1:].tolist()
+
+        # If the path is empty, then there was no path to the target.
+        if not path:
+            return []
+
+        # Convert from List[List[int]] to List[Tuple[int, int]].
+        return [(index[0], index[1]) for index in path]
+
+    def perform(self) -> None:
+        """Выполняет действия ИИ."""
+        target = self.engine.player #Всегда цель - игрок
+        dx = target.x - self.entity.x
+        dy = target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance
+
+        if self.cooldown > 0:
+            self.cooldown -= 1  # Уменьшаем перезарядку
+            self.engine.message_log.add_message(
+                            "Goblin have to reload...", color.white
+                        )
+            return WaitAction(self.entity).perform()  # Ждем
+
+        if self.engine.game_map.known[self.entity.x, self.entity.y]:
+            if distance < self.min_range:
+                #Пытаемся отойти от цели
+                new_x = self.entity.x - dx  # Двигаемся в противоположном направлении от игрока
+                new_y = self.entity.y - dy
+                if self.engine.game_map.tiles["walkable"][new_x, new_y] and not self.engine.game_map.get_blocking_entity_at_location(new_x, new_y):
+                    #Если клетка проходима и не заблокирована, двигаемся туда
+                    return MovementAction(self.entity, -dx, -dy).perform()
+                else:
+                    #Если отойти некуда, ждем
+                    return WaitAction(self.entity).perform()
+            if distance <= self.max_range:
+                self.cooldown = 2
+                # Атакуем, если цель в пределах досягаемости
+                return MeleeAction(self.entity, dx, dy).perform()
+            elif distance > self.max_range:
+                # Двигаемся ближе к цели
+                self.path = self.get_path_to(target.x, target.y)
+                if self.path: #Проверяем, что путь не пустой
+                    dest_x, dest_y = self.path.pop(0)
+                    return MovementAction(
+                        self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                    ).perform()
+        else: #Если не знаем ничего - ждём
+            return WaitAction(self.entity).perform()
 
 class Player(BaseAI):
     def __init__(self, entity: Actor):

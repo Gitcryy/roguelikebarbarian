@@ -99,6 +99,7 @@ class Actor(Entity):
         fighter: Fighter,
         inventory: Inventory,
         level: Level,
+        archer:bool = False,
     ):
         super().__init__(
             x=x,
@@ -123,6 +124,7 @@ class Actor(Entity):
 
         self.level = level
         self.level.parent = self
+        self.archer = archer
 
     @property
     def is_alive(self) -> bool:

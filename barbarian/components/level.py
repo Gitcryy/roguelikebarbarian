@@ -29,8 +29,10 @@ class Level(BaseComponent):
     def experience_to_next_level(self) -> int:
         if self.current_level == 1:
             return self.current_level * self.level_up_factor 
-        else:
+        elif self.current_level == 2:
             return (self.current_level * self.level_up_factor)*2
+        else:
+            return round((self.current_level*self.level_up_factor)*2*1.5)
         
     @property
     def requires_level_up(self) -> bool:

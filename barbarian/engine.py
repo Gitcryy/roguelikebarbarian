@@ -28,6 +28,7 @@ class Engine:
         self.player = player
         self.tracked_monsters = set()  # Set to track killed monster types
         self.move_counter = 0
+        self.last_player_position = (player.x, player.y)
         
     def handle_enemy_turns(self) -> None:
         for entity in set(self.game_map.actors) - {self.player}:
@@ -46,6 +47,10 @@ class Engine:
         )
         # If a tile is "visible" it should be added to "explored".
         self.game_map.explored |= self.game_map.visible
+
+        self.game_map.known[:] = self.game_map.visible.copy()
+        # Set the last position as visible to the known array
+        self.game_map.known[self.last_player_position] = True
 
     def render(self, console: Console) -> None:
         self.game_map.render(console)

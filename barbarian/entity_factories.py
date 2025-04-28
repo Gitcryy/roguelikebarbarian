@@ -1,4 +1,4 @@
-from components.ai import HostileEnemy, FriendlyNPC, Player
+from components.ai import HostileEnemy, FriendlyNPC, Player, HostileRanged
 from components import consumable, equippable
 from components.equipment import Equipment
 from components.fighter import Fighter
@@ -46,6 +46,16 @@ gobf=Actor(
     ai_cls=HostileEnemy,
     equipment=Equipment(),
     fighter=Fighter(hp=8, base_defense=6, base_power=3, base_pen = 2),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=1),
+)
+goba=Actor(
+    char="a",
+    color=(84,255,88),
+    name="Goblin Archer",
+    ai_cls=HostileRanged,
+    equipment=Equipment(),
+    fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=1),
 )
@@ -143,3 +153,19 @@ leather_armor = Item(
 chain_mail = Item(
     char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
 )
+
+
+MONSTER_GROUP_TEMPLATES = [
+    {
+        "name": "Группа гоблинов",
+        "members": [goba, goba, goba],
+    },
+    {
+        "name": "Пара троллей",
+        "members": [troll, troll],
+    },
+    {
+        "name": "Гоблин и тролль",
+        "members": [goba, troll],
+    },
+]

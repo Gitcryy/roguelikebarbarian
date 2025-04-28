@@ -120,6 +120,10 @@ class EventHandler(BaseEventHandler):
         action_or_state = self.dispatch(event)
         if isinstance(action_or_state, BaseEventHandler):
             return action_or_state
+        
+        if self.engine.game_map.visible[self.engine.player.x, self.engine.player.y]:
+            self.engine.last_player_position = (self.engine.player.x, self.engine.player.y)
+
         if self.handle_action(action_or_state):
             # A valid action was performed.
             if not self.engine.player.is_alive:
