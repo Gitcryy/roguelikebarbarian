@@ -100,6 +100,11 @@ class EquipAction(Action):
 
 class WaitAction(Action):
     def perform(self) -> None:
+        if self.entity is self.engine.player:
+            # Increment move counter
+            self.engine.move_counter += 1
+            if self.engine.move_counter % 15 == 0:
+                self.entity.fighter.heal(1)
         pass
 
 

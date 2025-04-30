@@ -225,11 +225,11 @@ class FriendlyNPC(BaseAI):
         self.in_party = not self.in_party
         if self.in_party:
             self.engine.message_log.add_message(
-                f"{self.entity.name} присоединяется к вашей группе."
+                f"{self.entity.name} joined in the group."
             )
         else:
             self.engine.message_log.add_message(
-                f"{self.entity.name} покидает вашу группу."
+                f"{self.entity.name} leaved your group."
             )
 
     def perform(self) -> None:

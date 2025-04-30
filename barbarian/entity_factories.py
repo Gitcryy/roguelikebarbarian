@@ -25,7 +25,7 @@ npc = Actor(
     equipment=Equipment(),
     fighter=Fighter(hp=30, base_defense=14, base_power=2, base_pen = 0),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=350),
+    level=Level(xp_given=5),
 )
 
 "tier 9"
@@ -37,7 +37,7 @@ gob = Actor(
     equipment=Equipment(),
     fighter=Fighter(hp=6, base_defense=6, base_power=2, base_pen = 1),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=1),
+    level=Level(xp_given=6),
 )
 gobf=Actor(
     char="f",
@@ -47,7 +47,7 @@ gobf=Actor(
     equipment=Equipment(),
     fighter=Fighter(hp=8, base_defense=6, base_power=3, base_pen = 2),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=1),
+    level=Level(xp_given=7),
 )
 goba=Actor(
     char="a",
@@ -57,28 +57,28 @@ goba=Actor(
     equipment=Equipment(),
     fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=1),
+    level=Level(xp_given=7),
 )
 skel=Actor(
-    char="f",
+    char="s",
     color=(47,50,54),
     name="Skeleton",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
     fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=1),
+    level=Level(xp_given=6),
 )
 "tier 8"
 death=Actor(
-    char="f",
+    char="d",
     color=(192,128,129),
     name="Death Fiend",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
     fighter=Fighter(hp=20, base_defense=10, base_power=5, base_pen = 5),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=2),
+    level=Level(xp_given=10),
 )
 
 orc = Actor(
@@ -89,7 +89,7 @@ orc = Actor(
     equipment=Equipment(),
     fighter=Fighter(hp=10, base_defense=13, base_power=3, base_pen = 3),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=350),
+    level=Level(xp_given=8),
 )
 troll = Actor(
     char="T",
@@ -99,7 +99,7 @@ troll = Actor(
     equipment=Equipment(),
     fighter=Fighter(hp=16, base_defense=16, base_power=6, base_pen = 6),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=1000),
+    level=Level(xp_given=30),
 )
 boss = Actor(
     char="B",
