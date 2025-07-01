@@ -251,7 +251,7 @@ class MovementAction(ActionWithDirection):
             else:
                 self.engine.portal_locations = []
             # Try to spawn new portal every 10 moves
-            if self.engine.move_counter >= 1000:
+            if self.engine.move_counter >= 10:
                 player_x, player_y = self.engine.player.x, self.engine.player.y
                 # Try to spawn portal 2 tiles to the right
                 portal_x = player_x + 2

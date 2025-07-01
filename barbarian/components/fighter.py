@@ -14,12 +14,15 @@ if TYPE_CHECKING:
 class Fighter(BaseComponent):
     parent: Actor
 
-    def __init__(self, hp: int, base_defense: int, base_power: int, base_pen: int):
+    def __init__(self, hp: int, base_defense: int, base_power: int, base_pen: int, base_ms: int):
         self.max_hp = hp
         self._hp = hp
         self.base_pen = base_pen
         self.base_defense = base_defense
         self.base_power = base_power
+        self.base_ms = base_ms
+        self.ms_remainder = 0  # Остаток скорости
+        
 
     @property
     def hp(self) -> int:
@@ -45,13 +48,6 @@ class Fighter(BaseComponent):
             return self.parent.equipment.defense_bonus
         else:
             return 0
-
-    @property
-    def power_bonus(self) -> int:
-        if self.parent.equipment:
-            return self.parent.equipment.power_bonus
-        else:
-            return 0
     
     @property
     def pen(self) -> int:
@@ -63,7 +59,17 @@ class Fighter(BaseComponent):
             return self.parent.equipment.pen_bonus
         else:
             return 0
-        
+    
+    @property
+    def ms(self) -> int:
+        return self.base_ms + self.ms_bonus
+    
+    @property
+    def ms_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.ms_bonus
+        else:
+            return 0
 
     def die(self) -> None:
         if self.engine.player is self.parent:
@@ -108,3 +114,21 @@ class Fighter(BaseComponent):
 
     def take_damage(self, amount: int) -> None:
         self.hp -= amount
+
+    def can_move(self) -> bool:
+        """Проверяет, может ли сущность совершить ход на текущем ходу.
+
+        Возвращает True, если у сущности достаточно MS для хода, False в противном случае."""
+        self.ms_remainder += self.ms
+        if self.ms_remainder >= 100:
+            return True
+        return False
+
+    def consume_move(self) -> None:
+        """Уменьшает ms_remainder после совершения хода."""
+        self.ms_remainder -= 100  # Потребляем 100 MS для хода
+        self.ms_remainder = max(0, self.ms_remainder)  # Не даем остатку уйти в минус
+
+    def get_extra_moves(self) -> int:
+        """Возвращает количество дополнительных ходов, которые можно совершить."""
+        return self.ms_remainder // 100

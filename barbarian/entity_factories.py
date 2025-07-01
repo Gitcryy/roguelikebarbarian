@@ -13,7 +13,7 @@ player = Actor(
     name="Player",
     ai_cls=Player,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=10, base_power=2, base_pen = 0),
+    fighter=Fighter(hp=30, base_defense=10, base_power=2, base_pen = 0, base_ms=100),
     inventory=Inventory(capacity=26),
     level=Level(level_up_base=5),
 )
@@ -23,7 +23,7 @@ npc = Actor(
     name="NPC",
     ai_cls=FriendlyNPC,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=14, base_power=2, base_pen = 0),
+    fighter=Fighter(hp=30, base_defense=14, base_power=2, base_pen = 0, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=5),
 )
@@ -35,7 +35,7 @@ gob = Actor(
     name="Goblin",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=6, base_defense=6, base_power=2, base_pen = 1),
+    fighter=Fighter(hp=6, base_defense=6, base_power=2, base_pen = 1, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=6),
 )
@@ -45,7 +45,7 @@ gobf=Actor(
     name="Goblin Fighter",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=8, base_defense=6, base_power=3, base_pen = 2),
+    fighter=Fighter(hp=8, base_defense=6, base_power=3, base_pen = 2, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=7),
 )
@@ -55,7 +55,7 @@ goba=Actor(
     name="Goblin Archer",
     ai_cls=HostileRanged,
     equipment=Equipment(),
-    fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2),
+    fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=7),
 )
@@ -65,7 +65,7 @@ skel=Actor(
     name="Skeleton",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2),
+    fighter=Fighter(hp=4, base_defense=6, base_power=3, base_pen = 2, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=6),
 )
@@ -76,7 +76,7 @@ death=Actor(
     name="Death Fiend",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=20, base_defense=10, base_power=5, base_pen = 5),
+    fighter=Fighter(hp=20, base_defense=10, base_power=5, base_pen = 5, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=10),
 )
@@ -87,7 +87,7 @@ orc = Actor(
     name="Orc",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=10, base_defense=13, base_power=3, base_pen = 3),
+    fighter=Fighter(hp=10, base_defense=13, base_power=3, base_pen = 3, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=8),
 )
@@ -97,7 +97,7 @@ troll = Actor(
     name="Troll",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=16, base_defense=16, base_power=6, base_pen = 6),
+    fighter=Fighter(hp=16, base_defense=16, base_power=6, base_pen = 6, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=30),
 )
@@ -107,7 +107,7 @@ boss = Actor(
     name="Boss",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=18, base_power=10, base_pen = 10),
+    fighter=Fighter(hp=30, base_defense=18, base_power=10, base_pen = 10, base_ms=100),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=1000),
 )

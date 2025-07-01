@@ -19,12 +19,14 @@ class Equippable(BaseComponent):
         power_max:int=0,
         pen_bonus: int = 0,
         defense_bonus: int = 0,
+        ms_bonus: int = 0,
     ):
         self.power_min = power_min
         self.power_max = power_max
         self.equipment_type = equipment_type
         self.defense_bonus = defense_bonus
         self.pen_bonus = pen_bonus
+        self.ms_bonus = ms_bonus
 
     def get_power_bonus(self) -> int:
         """Returns a random power bonus based on power_min and power_max."""
@@ -43,7 +45,7 @@ class Sword(Equippable):
 
 class LeatherArmor(Equippable):
     def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.ARMOR, defense_bonus=1, pen_bonus=0)
+        super().__init__(equipment_type=EquipmentType.ARMOR, defense_bonus=1, pen_bonus=0, ms_bonus=10)
 
 
 class ChainMail(Equippable):
