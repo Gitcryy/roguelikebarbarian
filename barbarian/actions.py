@@ -272,60 +272,61 @@ class MovementAction(ActionWithDirection):
                     self.engine.message_log.add_message(
                         "A mysterious red portal appears nearby!", color.red
                     )
-
-        if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_blue:
-            self.engine.game_world.current_floor = 1  # Set to first dungeon floor
-            self.engine.game_world.generate_floor()
-            
-            # Get all party members before changing map
-            party_members = [
-                entity for entity in self.engine.game_map.actors
-                if hasattr(entity, "ai") and hasattr(entity.ai, "in_party") and entity.ai.in_party
-            ]
-            
-            # Place player and party in dungeon
-            center_x = self.engine.game_map.width // 2
-            center_y = self.engine.game_map.height // 2
-            self.entity.place(center_x, center_y, self.engine.game_map)
-            
-            # Place party members around the player
-            for i, member in enumerate(party_members):
-                dx = [-1, 1, 0, 0][i % 4]
-                dy = [0, 0, -1, 1][i % 4]
-                member.place(center_x + dx, center_y + dy, self.engine.game_map)
-            
-            self.engine.message_log.add_message(
-                "You step through the blue portal and enter the dungeon!", color.blue
-            )
-            return
-            
-        # Handle red portal (dungeon to city)
-        
-        if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_red:
-                self.engine.game_world.current_floor = 0  # Return to city
+                
+        if self.entity is self.engine.player:
+            if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_blue:
+                self.engine.game_world.current_floor = 1  # Set to first dungeon floor
                 self.engine.game_world.generate_floor()
                 
-                # Get party members
+                # Get all party members before changing map
                 party_members = [
                     entity for entity in self.engine.game_map.actors
                     if hasattr(entity, "ai") and hasattr(entity.ai, "in_party") and entity.ai.in_party
                 ]
                 
-                # Place player and party in city
+                # Place player and party in dungeon
                 center_x = self.engine.game_map.width // 2
                 center_y = self.engine.game_map.height // 2
                 self.entity.place(center_x, center_y, self.engine.game_map)
                 
-                # Place party members
+                # Place party members around the player
                 for i, member in enumerate(party_members):
                     dx = [-1, 1, 0, 0][i % 4]
                     dy = [0, 0, -1, 1][i % 4]
                     member.place(center_x + dx, center_y + dy, self.engine.game_map)
                 
                 self.engine.message_log.add_message(
-                    "You step through the red portal and return to the city!", color.red
+                    "You step through the blue portal and enter the dungeon!", color.blue
                 )
                 return
+                
+            # Handle red portal (dungeon to city)
+            
+            if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_red:
+                    self.engine.game_world.current_floor = 0  # Return to city
+                    self.engine.game_world.generate_floor()
+                    
+                    # Get party members
+                    party_members = [
+                        entity for entity in self.engine.game_map.actors
+                        if hasattr(entity, "ai") and hasattr(entity.ai, "in_party") and entity.ai.in_party
+                    ]
+                    
+                    # Place player and party in city
+                    center_x = self.engine.game_map.width // 2
+                    center_y = self.engine.game_map.height // 2
+                    self.entity.place(center_x, center_y, self.engine.game_map)
+                    
+                    # Place party members
+                    for i, member in enumerate(party_members):
+                        dx = [-1, 1, 0, 0][i % 4]
+                        dy = [0, 0, -1, 1][i % 4]
+                        member.place(center_x, center_y, self.engine.game_map)
+                    
+                    self.engine.message_log.add_message(
+                        "You step through the red portal and return to the city!", color.red
+                    )
+                    return
 
         if not self.engine.game_map.tiles["walkable"][dest_x, dest_y]:
             # Destination is blocked by a tile.
