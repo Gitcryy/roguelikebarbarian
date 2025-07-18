@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from entity import Actor, Entity, Item
 
 
+
+
 class Action:
     def __init__(self, entity: Actor) -> None:
         super().__init__()
@@ -43,18 +45,26 @@ class PickupAction(Action):
         actor_location_x = self.entity.x
         actor_location_y = self.entity.y
         inventory = self.entity.inventory
+        cost = 50
+        
+        
+        if self.entity.fighter.qn < cost:
+            self.engine.message_log.add_message(f"Too slow to pick up!")
+            self.entity.fighter.qn_remainder += 100
+            WaitAction
+            return
+        else:
+            for item in self.engine.game_map.items:
+                if actor_location_x == item.x and actor_location_y == item.y:
+                    if len(inventory.items) >= inventory.capacity:
+                        raise exceptions.Impossible("Your inventory is full.")
+                    self.entity.fighter.qn -= cost
+                    self.engine.game_map.entities.remove(item)
+                    item.parent = self.entity.inventory
+                    inventory.items.append(item)
 
-        for item in self.engine.game_map.items:
-            if actor_location_x == item.x and actor_location_y == item.y:
-                if len(inventory.items) >= inventory.capacity:
-                    raise exceptions.Impossible("Your inventory is full.")
-
-                self.engine.game_map.entities.remove(item)
-                item.parent = self.entity.inventory
-                inventory.items.append(item)
-
-                self.engine.message_log.add_message(f"You picked up the {item.name}!")
-                return
+                    self.engine.message_log.add_message(f"You picked up the {item.name}!")
+                    return
 
         raise exceptions.Impossible("There is nothing here to pick up.")
 

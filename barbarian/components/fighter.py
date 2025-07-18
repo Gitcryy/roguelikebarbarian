@@ -14,15 +14,45 @@ if TYPE_CHECKING:
 class Fighter(BaseComponent):
     parent: Actor
 
-    def __init__(self, hp: int, base_defense: int, base_power: int, base_pen: int, base_ms: int):
+    def __init__(self, 
+                 hp: int, 
+                 base_defense: int, 
+                 base_power: int, 
+                 base_pen: int, 
+                 base_ms: int,
+                 base_qn:int,
+                 mp:int,
+                 base_mdef: int,
+                 base_mpow:int,
+                 magic_qn:int,
+                 mental:int,
+                 slots:int,
+                 holy:int,
+                 luck:int,
+                 equip: int,
+                 ):
         self.max_hp = hp
         self._hp = hp
         self.base_pen = base_pen
         self.base_defense = base_defense
         self.base_power = base_power
+        self.base_qn = base_qn
         self.base_ms = base_ms
+        self.qn_remainder = 0
         self.ms_remainder = 0  # Остаток скорости
-        
+        self.max_mp = mp
+        self._mp = mp
+        self.base_mdef = base_mdef
+        self.base_mpow = base_mpow
+        self.magic_qn = magic_qn
+        self.max_mental = mental
+        self._mental = mental
+        self.max_slots = slots
+        self._slots = slots
+        self.max_holy = holy
+        self._holy = holy
+        self._luck = luck
+        self._equip = equip
 
     @property
     def hp(self) -> int:
@@ -35,8 +65,39 @@ class Fighter(BaseComponent):
             self.die()
 
     @property
+    def mp(self) -> int:
+        return self._mp
+    
+    @mp.setter
+    def mp(self, value:int) -> None:
+        self._mp = max(0,min(value, self.max_mp))
+    
+    @property
+    def holy(self) -> int:
+        return self._holy
+    
+    @holy.setter
+    def holy(self, value:int) -> None:
+        self._mp = max(0,min(value, self.max_holy))
+
+    @property
+    def luck(self) -> int:
+        return self._luck + self.luck_bonus
+
+    @property
+    def luck_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.luck_bonus
+        else:
+            return 0
+
+    @property
     def defense(self) -> int:
         return self.base_defense + self.defense_bonus
+
+    @property
+    def equip(self) -> int:
+        return self.parent.equipment.equiprate
 
     @property
     def power(self) -> int:
@@ -70,6 +131,24 @@ class Fighter(BaseComponent):
             return self.parent.equipment.ms_bonus
         else:
             return 0
+
+    @property
+    def qn(self) -> int:
+        return self.base_qn + self.qn_bonus + self.qn_remainder
+    
+    @qn.setter
+    def qn(self, value:int):
+        self.qn_remainder = value
+    
+    @property
+    def qn_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.qn_bonus
+        else:
+            return 0
+        
+
+
 
     def die(self) -> None:
         if self.engine.player is self.parent:

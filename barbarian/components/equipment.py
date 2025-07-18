@@ -29,6 +29,30 @@ class Equipment(BaseComponent):
         return bonus
 
     @property
+    def luck_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.luck_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.luck_bonus
+
+        return bonus
+
+    @property
+    def equiprate(self) -> int:
+        bonus = 0
+        
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.equiprate
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.equiprate
+
+        return bonus
+
+    @property
     def pen_bonus(self) -> int:
         bonus = 0
         
@@ -51,6 +75,19 @@ class Equipment(BaseComponent):
             bonus += self.armor.equippable.ms_bonus
 
         return bonus
+
+    @property
+    def qn_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.qn_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.qn_bonus
+
+        return bonus
+
 
     def item_is_equipped(self, item: Item) -> bool:
         return self.weapon == item or self.armor == item

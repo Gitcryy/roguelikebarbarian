@@ -20,6 +20,9 @@ class Equippable(BaseComponent):
         pen_bonus: int = 0,
         defense_bonus: int = 0,
         ms_bonus: int = 0,
+        qn_bonus:int = 0,
+        luck_bonus:int = 0,
+        equiprate: int = 0,
     ):
         self.power_min = power_min
         self.power_max = power_max
@@ -27,6 +30,9 @@ class Equippable(BaseComponent):
         self.defense_bonus = defense_bonus
         self.pen_bonus = pen_bonus
         self.ms_bonus = ms_bonus
+        self.qn_bonus = qn_bonus
+        self.luck_bonus = luck_bonus
+        self.equiprate = equiprate
 
     def get_power_bonus(self) -> int:
         """Returns a random power bonus based on power_min and power_max."""
