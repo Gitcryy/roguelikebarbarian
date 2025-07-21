@@ -141,9 +141,6 @@ class EventHandler(BaseEventHandler):
         """
         if action is None:
             return False
-        entity = action.entity  # Предполагается, что Action имеет ссылку на сущность
-        action_cost = action.cost #  Предполагается, что Action имеет стоимость
-
 
         try:
             action.perform()

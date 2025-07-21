@@ -14,10 +14,9 @@ if TYPE_CHECKING:
 
 
 class Action:
-    def __init__(self, entity: Actor, cost:int) -> None:
+    def __init__(self, entity: Actor) -> None:
         super().__init__()
         self.entity = entity
-        self.cost = cost
 
     @property
     def engine(self) -> Engine:
@@ -40,21 +39,33 @@ class PickupAction(Action):
     """Pickup an item and add it to the inventory, if there is room for it."""
 
     def __init__(self, entity: Actor):
-        super().__init__(entity, cost=50)
+        super().__init__(entity)
 
     def perform(self) -> None:
         actor_location_x = self.entity.x
         actor_location_y = self.entity.y
         inventory = self.entity.inventory
-        for item in self.engine.game_map.items:
-            if actor_location_x == item.x and actor_location_y == item.y:
-                if len(inventory.items) >= inventory.capacity:
-                    raise exceptions.Impossible("Your inventory is full.")
-                self.engine.game_map.entities.remove(item)
-                item.parent = self.entity.inventory
-                inventory.items.append(item)
-                self.engine.message_log.add_message(f"You picked up the {item.name}!")
-                return
+        cost = 50
+        
+        
+        if self.entity.fighter.qn < cost:
+            self.engine.message_log.add_message(f"While you picking up, monsters go to you....")
+            self.entity.fighter.qn_remainder += 100
+            WaitAction.perform
+            return
+        else:
+            for item in self.engine.game_map.items:
+                if actor_location_x == item.x and actor_location_y == item.y:
+                    if len(inventory.items) >= inventory.capacity:
+                        raise exceptions.Impossible("Your inventory is full.")
+                    
+                    self.entity.fighter.qn -= cost
+                    self.engine.game_map.entities.remove(item)
+                    item.parent = self.entity.inventory
+                    inventory.items.append(item)
+
+                    self.engine.message_log.add_message(f"You picked up the {item.name}!")
+                    return
 
         raise exceptions.Impossible("There is nothing here to pick up.")
 
@@ -63,7 +74,7 @@ class ItemAction(Action):
     def __init__(
         self, entity: Actor, item: Item, target_xy: Optional[Tuple[int, int]] = None
     ):
-        super().__init__(entity, cost=100)
+        super().__init__(entity)
         self.item = item
         if not target_xy:
             target_xy = entity.x, entity.y
@@ -90,7 +101,7 @@ class DropItem(ItemAction):
 
 class EquipAction(Action):
     def __init__(self, entity: Actor, item: Item):
-        super().__init__(entity, cost=100)
+        super().__init__(entity)
 
         self.item = item
 
@@ -124,7 +135,7 @@ class TakeStairsAction(Action):
 
 class ActionWithDirection(Action):
     def __init__(self, entity: Actor, dx: int, dy: int):
-        super().__init__(entity, cost=100)
+        super().__init__(entity)
 
         self.dx = dx
         self.dy = dy
