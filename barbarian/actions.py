@@ -106,8 +106,19 @@ class EquipAction(Action):
         self.item = item
 
     def perform(self) -> None:
-        self.entity.equipment.toggle_equip(self.item)
 
+        cost = 100
+        
+        if self.entity.fighter.qn < cost:
+            self.engine.message_log.add_message(f"While you equipping, monsters go to you....")
+            self.entity.fighter.qn_remainder += 100
+            WaitAction.perform
+            return
+        else:
+            self.entity.equipment.toggle_equip(self.item)
+            self.entity.fighter.qn -= cost
+            return
+        
 
 class WaitAction(Action):
     def perform(self) -> None:
@@ -124,13 +135,23 @@ class TakeStairsAction(Action):
         """
         Take the stairs, if any exist at the entity's location.
         """
-        if (self.entity.x, self.entity.y) in self.engine.game_map.downstairs_locations:
-            self.engine.game_world.generate_floor()
-            self.engine.message_log.add_message(
-                "You descend the staircase.", color.descend
-            )
+        cost = 100
+        if self.entity.fighter.qn < cost:
+            self.engine.message_log.add_message(f"You not too fast to descend, monsters go to you....")
+            self.entity.fighter.qn_remainder += 100
+            WaitAction.perform
+            return
         else:
-            raise exceptions.Impossible("There are no stairs here.")
+            if (self.entity.x, self.entity.y) in self.engine.game_map.downstairs_locations:
+                self.entity.fighter.qn -= cost
+                self.engine.game_world.generate_floor()
+                self.engine.message_log.add_message(
+                    "You descend the staircase.", color.descend
+                )
+            else:
+                raise exceptions.Impossible("There are no stairs here.")
+            return
+        
 
 
 class ActionWithDirection(Action):
@@ -161,6 +182,7 @@ class ActionWithDirection(Action):
 class MeleeAction(ActionWithDirection):
 
     def perform(self) -> None:
+        
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
@@ -199,37 +221,46 @@ class RangedAttack(ActionWithDirection): #Наследуемся от базов
         super().__init__(entity, dx, dy)
 
     def perform(self) -> None:
+        cost = 200
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
-        #Вот тут используем
-        if self.entity.equipment and self.entity.equipment.weapon and self.entity.equipment.weapon.equippable:
-            power_bonus = self.entity.equipment.weapon.equippable.get_power_bonus() # Получаем случайный бонус из оружия
+        if self.entity.fighter.qn < cost:
+            self.engine.message_log.add_message(f"While you reloading, monsters go to you....")
+            self.entity.fighter.qn_remainder += 100
+            WaitAction.perform
+            return
         else:
-            power_bonus = 0 #Если нет оружия, нет бонуса
-        damage = self.entity.fighter.power + power_bonus
-        pen = self.entity.fighter.pen
-        dice = dices.roll(1,20)
-        attack_desc = f"{self.entity.name.capitalize()} shoots {target.name}"
-        if self.entity is self.engine.player:
-            attack_color = color.player_atk
-        else:
-            attack_color = color.enemy_atk
+            if self.entity.equipment and self.entity.equipment.weapon and self.entity.equipment.weapon.equippable:
+                power_bonus = self.entity.equipment.weapon.equippable.get_power_bonus() # Получаем случайный бонус из оружия
+            else:
+                power_bonus = 0 #Если нет оружия, нет бонуса
+            damage = self.entity.fighter.power + power_bonus
+            pen = self.entity.fighter.pen
+            dice = dices.roll(1,20)
+            attack_desc = f"{self.entity.name.capitalize()} shoots {target.name}"
+            if self.entity is self.engine.player:
+                attack_color = color.player_atk
+            else:
+                attack_color = color.enemy_atk
 
-        if dice == 20:
-            self.engine.message_log.add_message(
-                f"{attack_desc} for crit {(damage*2)} hit points.[{dice}]", attack_color
-            )
-            target.fighter.hp -= (damage*2)
-        elif dice + pen >= target.fighter.defense:
-            self.engine.message_log.add_message(
-                f"{attack_desc} for {damage} hit points.[{dice} + {pen}]", attack_color
-            )
-            target.fighter.hp -= damage
-        else:
-            self.engine.message_log.add_message(
-                f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
-            )
+            if dice == 20:
+                self.engine.message_log.add_message(
+                    f"{attack_desc} for crit {(damage*2)} hit points.[{dice}]", attack_color
+                )
+                target.fighter.hp -= (damage*2)
+            elif dice + pen >= target.fighter.defense:
+                self.engine.message_log.add_message(
+                    f"{attack_desc} for {damage} hit points.[{dice} + {pen}]", attack_color
+                )
+                target.fighter.hp -= damage
+            else:
+                self.engine.message_log.add_message(
+                    f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
+                )
+            self.entity.fighter.qn -= cost
+            return
+            
     
 class MovementAction(ActionWithDirection):
     def perform(self) -> None:
@@ -351,9 +382,16 @@ class MovementAction(ActionWithDirection):
 
 class BumpAction(ActionWithDirection):
     def perform(self) -> None:
+        cost = 100
         if self.target_actor:
-            return MeleeAction(self.entity, self.dx, self.dy).perform()
-
+            if self.entity.fighter.qn < cost:
+                self.engine.message_log.add_message(f"While you swinging, monsters go to you....")
+                self.entity.fighter.qn_remainder += 100
+                WaitAction.perform
+                return
+            else:
+                self.entity.fighter.qn -= cost
+                return MeleeAction(self.entity, self.dx, self.dy).perform()
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()
 
