@@ -102,14 +102,28 @@ class HostileEnemy(BaseAI):
         dy = closest_target.y - self.entity.y
         distance = max(abs(dx), abs(dy))
         if self.engine.game_map.visible[self.entity.x, self.entity.y]:
-            if distance <= 1:
-                return MeleeAction(self.entity, dx, dy).perform()
-            self.path = self.get_path_to(closest_target.x, closest_target.y)
+            if self.entity.fighter.qn_remainder < MeleeAction.cost:
+                self.engine.message_log.add_message(f"While you equipping, monsters go to you....")
+                self.entity.fighter.qn_remainder += self.entity.fighter.qn
+                
+                return WaitAction(self.entity).perform
+                
+            elif self.entity.fighter.qn_remainder > MeleeAction.cost:
+                if distance <= 1:
+                    self.entity.fighter.qn_remainder -= MeleeAction.cost
+                    return MeleeAction(self.entity, dx, dy).perform()
+                self.path = self.get_path_to(closest_target.x, closest_target.y)
         if self.path:
-            dest_x, dest_y = self.path.pop(0)
-            return MovementAction(
-                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-            ).perform()
+            if self.entity.fighter.qn_remainder < MovementAction.cost:
+                self.engine.message_log.add_message(f"While you equipping, monsters go to you....")
+                self.entity.fighter.qn_remainder += self.entity.fighter.qn
+                return WaitAction(self.entity).perform
+            if self.entity.fighter.ms_remainder >= MovementAction.cost:
+                dest_x, dest_y = self.path.pop(0)
+                self.entity.fighter.qn_remainder -= MovementAction.cost
+                return MovementAction(
+                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                ).perform()
         return WaitAction(self.entity).perform()
 
 class HostileRanged(HostileEnemy):

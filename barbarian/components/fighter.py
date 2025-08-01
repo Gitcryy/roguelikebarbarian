@@ -38,8 +38,8 @@ class Fighter(BaseComponent):
         self.base_power = base_power
         self.base_qn = base_qn
         self.base_ms = base_ms
-        self.qn_remainder = 0
-        self.ms_remainder = 0  # Остаток скорости
+        self._qn_remainder = 0
+        self._ms_remainder = 0  # Остаток скорости
         self.max_mp = mp
         self._mp = mp
         self.base_mdef = base_mdef
@@ -126,27 +126,46 @@ class Fighter(BaseComponent):
         return self.base_ms + self.ms_bonus
     
     @property
+    def ms_remainder(self) -> int:
+        return self._ms_remainder
+
+
+    @property
     def ms_bonus(self) -> int:
         if self.parent.equipment:
             return self.parent.equipment.ms_bonus
         else:
             return 0
+        
+
+    @ms_remainder.setter
+    def ms_remainder(self, value: int) -> None:
+        """Устанавливает значение qn_remainder напрямую (обычно не требуется)."""
+        self._ms_remainder = value
+
 
     @property
     def qn(self) -> int:
-        return self.base_qn + self.qn_bonus + self.qn_remainder
-    
-    @qn.setter
-    def qn(self, value:int):
-        self.qn_remainder = value
-    
+        """Возвращает текущее значение qn."""
+        return self.base_qn + self.qn_bonus
+
+    @property
+    def qn_remainder(self) -> int:
+        """Возвращает текущее значение остатка qn_remainder."""
+        return self._qn_remainder
+
+    @qn_remainder.setter
+    def qn_remainder(self, value: int) -> None:
+        """Устанавливает значение qn_remainder напрямую (обычно не требуется)."""
+        self._qn_remainder = value
+
     @property
     def qn_bonus(self) -> int:
         if self.parent.equipment:
             return self.parent.equipment.qn_bonus
         else:
             return 0
-        
+
 
 
 

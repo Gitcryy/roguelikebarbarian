@@ -51,7 +51,7 @@ class Sword(Equippable):
 
 class LeatherArmor(Equippable):
     def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.ARMOR, defense_bonus=1, pen_bonus=0, ms_bonus=10)
+        super().__init__(equipment_type=EquipmentType.ARMOR, defense_bonus=1, pen_bonus=0, ms_bonus=0)
 
 
 class ChainMail(Equippable):

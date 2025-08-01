@@ -48,24 +48,21 @@ class PickupAction(Action):
         cost = 50
         
         
-        if self.entity.fighter.qn < cost:
-            self.engine.message_log.add_message(f"While you picking up, monsters go to you....")
-            self.entity.fighter.qn_remainder += 100
+        while self.entity.fighter.qn_remainder < cost:
+            print(f"qn: {self.entity.fighter.qn}, qn_remainder: {self.entity.fighter.qn_remainder}, cost: {cost}")
+            self.entity.fighter.qn_remainder += self.entity.fighter.qn
             WaitAction.perform
-            return
-        else:
-            for item in self.engine.game_map.items:
-                if actor_location_x == item.x and actor_location_y == item.y:
-                    if len(inventory.items) >= inventory.capacity:
-                        raise exceptions.Impossible("Your inventory is full.")
-                    
-                    self.entity.fighter.qn -= cost
-                    self.engine.game_map.entities.remove(item)
-                    item.parent = self.entity.inventory
-                    inventory.items.append(item)
-
-                    self.engine.message_log.add_message(f"You picked up the {item.name}!")
-                    return
+        for item in self.engine.game_map.items:
+            if actor_location_x == item.x and actor_location_y == item.y:
+                if len(inventory.items) >= inventory.capacity:
+                    raise exceptions.Impossible("Your inventory is full.")
+                
+                self.entity.fighter.qn_remainder -= cost
+                self.engine.game_map.entities.remove(item)
+                item.parent = self.entity.inventory
+                inventory.items.append(item)
+                self.engine.message_log.add_message(f"You picked up the {item.name}!")
+                return
 
         raise exceptions.Impossible("There is nothing here to pick up.")
 
@@ -108,16 +105,13 @@ class EquipAction(Action):
     def perform(self) -> None:
 
         cost = 100
-        
-        if self.entity.fighter.qn < cost:
+        while self.entity.fighter.qn_remainder < cost:
             self.engine.message_log.add_message(f"While you equipping, monsters go to you....")
-            self.entity.fighter.qn_remainder += 100
+            self.entity.fighter.qn_remainder += self.entity.fighter.qn
             WaitAction.perform
-            return
-        else:
-            self.entity.equipment.toggle_equip(self.item)
-            self.entity.fighter.qn -= cost
-            return
+        self.entity.equipment.toggle_equip(self.item)
+        self.entity.fighter.qn_remainder -= cost
+        return
         
 
 class WaitAction(Action):
@@ -136,21 +130,21 @@ class TakeStairsAction(Action):
         Take the stairs, if any exist at the entity's location.
         """
         cost = 100
-        if self.entity.fighter.qn < cost:
+        while self.entity.fighter.qn_remainder < cost:
             self.engine.message_log.add_message(f"You not too fast to descend, monsters go to you....")
-            self.entity.fighter.qn_remainder += 100
+            self.entity.fighter.qn_remainder += self.entity.fighter.qn
             WaitAction.perform
-            return
+            
+
+        if (self.entity.x, self.entity.y) in self.engine.game_map.downstairs_locations:
+            self.entity.fighter.qn_remainder -= cost
+            self.engine.game_world.generate_floor()
+            self.engine.message_log.add_message(
+                "You descend the staircase.", color.descend
+            )
         else:
-            if (self.entity.x, self.entity.y) in self.engine.game_map.downstairs_locations:
-                self.entity.fighter.qn -= cost
-                self.engine.game_world.generate_floor()
-                self.engine.message_log.add_message(
-                    "You descend the staircase.", color.descend
-                )
-            else:
-                raise exceptions.Impossible("There are no stairs here.")
-            return
+            raise exceptions.Impossible("There are no stairs here.")
+        return
         
 
 
@@ -182,11 +176,17 @@ class ActionWithDirection(Action):
 class MeleeAction(ActionWithDirection):
 
     def perform(self) -> None:
-        
+        cost = 100
+
+        while self.entity.fighter.qn_remainder < cost:
+            self.engine.message_log.add_message(f"While you swinging, monsters go to you....")
+            self.entity.fighter.qn_remainder += self.entity.fighter.qn
+            WaitAction.perform
+            
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
-
+        
         if self.entity.equipment and self.entity.equipment.weapon and self.entity.equipment.weapon.equippable:
             power_bonus = self.entity.equipment.weapon.equippable.get_power_bonus() # Получаем случайный бонус из оружия
         else:
@@ -194,7 +194,6 @@ class MeleeAction(ActionWithDirection):
         damage = self.entity.fighter.power + power_bonus
         pen = self.entity.fighter.pen
         dice = dices.roll(1,20)   
-
         attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
         if self.entity is self.engine.player:
             attack_color = color.player_atk
@@ -215,6 +214,9 @@ class MeleeAction(ActionWithDirection):
             self.engine.message_log.add_message(
                 f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
             )
+        self.entity.fighter.qn_remainder -= cost
+        return
+            
 
 class RangedAttack(ActionWithDirection): #Наследуемся от базового класса
     def __init__(self, entity: Actor, dx: int, dy: int):
@@ -225,9 +227,9 @@ class RangedAttack(ActionWithDirection): #Наследуемся от базов
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
-        if self.entity.fighter.qn < cost:
+        if self.entity.fighter.qn_remainder < cost:
             self.engine.message_log.add_message(f"While you reloading, monsters go to you....")
-            self.entity.fighter.qn_remainder += 100
+            self.entity.fighter.qn_remainder += self.entity.fighter.qn
             WaitAction.perform
             return
         else:
@@ -258,7 +260,7 @@ class RangedAttack(ActionWithDirection): #Наследуемся от базов
                 self.engine.message_log.add_message(
                     f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
                 )
-            self.entity.fighter.qn -= cost
+            self.entity.fighter.qn_remainder -= cost
             return
             
     
@@ -270,6 +272,8 @@ class MovementAction(ActionWithDirection):
             # Destination is out of bounds.
             raise exceptions.Impossible("That way is blocked.")
         
+        cost = 100
+            
         if self.entity is self.engine.player:
             # Increment move counter
             self.engine.move_counter += 1
@@ -287,7 +291,7 @@ class MovementAction(ActionWithDirection):
                         self.engine.message_log.add_message(
                             "A red portal fades away...", color.red
                         )
-                
+                    
                 for portal in portals_to_remove:
                     self.engine.portal_locations.remove(portal)
             else:
@@ -314,84 +318,77 @@ class MovementAction(ActionWithDirection):
                     self.engine.message_log.add_message(
                         "A mysterious red portal appears nearby!", color.red
                     )
-                
-        if self.entity is self.engine.player:
-            if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_blue:
-                self.engine.game_world.current_floor = 1  # Set to first dungeon floor
-                self.engine.game_world.generate_floor()
-                
-                # Get all party members before changing map
-                party_members = [
-                    entity for entity in self.engine.game_map.actors
-                    if hasattr(entity, "ai") and hasattr(entity.ai, "in_party") and entity.ai.in_party
-                ]
-                
-                # Place player and party in dungeon
-                center_x = self.engine.game_map.width // 2
-                center_y = self.engine.game_map.height // 2
-                self.entity.place(center_x, center_y, self.engine.game_map)
-                
-                # Place party members around the player
-                for i, member in enumerate(party_members):
-                    dx = [-1, 1, 0, 0][i % 4]
-                    dy = [0, 0, -1, 1][i % 4]
-                    member.place(center_x + dx, center_y + dy, self.engine.game_map)
-                
-                self.engine.message_log.add_message(
-                    "You step through the blue portal and enter the dungeon!", color.blue
-                )
-                return
-                
-            # Handle red portal (dungeon to city)
-            
-            if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_red:
-                    self.engine.game_world.current_floor = 0  # Return to city
+                    
+            if self.entity is self.engine.player:
+                if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_blue:
+                    self.engine.game_world.current_floor = 1  # Set to first dungeon floor
                     self.engine.game_world.generate_floor()
                     
-                    # Get party members
+                    # Get all party members before changing map
                     party_members = [
                         entity for entity in self.engine.game_map.actors
                         if hasattr(entity, "ai") and hasattr(entity.ai, "in_party") and entity.ai.in_party
                     ]
                     
-                    # Place player and party in city
+                    # Place player and party in dungeon
                     center_x = self.engine.game_map.width // 2
                     center_y = self.engine.game_map.height // 2
                     self.entity.place(center_x, center_y, self.engine.game_map)
                     
-                    # Place party members
+                    # Place party members around the player
                     for i, member in enumerate(party_members):
                         dx = [-1, 1, 0, 0][i % 4]
                         dy = [0, 0, -1, 1][i % 4]
-                        member.place(center_x, center_y, self.engine.game_map)
+                        member.place(center_x + dx, center_y + dy, self.engine.game_map)
                     
                     self.engine.message_log.add_message(
-                        "You step through the red portal and return to the city!", color.red
+                        "You step through the blue portal and enter the dungeon!", color.blue
                     )
                     return
-
-        if not self.engine.game_map.tiles["walkable"][dest_x, dest_y]:
-            # Destination is blocked by a tile.
-            raise exceptions.Impossible("That way is blocked.")
-        if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
-            # Destination is blocked by an entity.
-            raise exceptions.Impossible("That way is blocked.")
-        self.entity.move(self.dx, self.dy)
+                        
+                # Handle red portal (dungeon to city)
+                
+                if self.engine.game_map.tiles[dest_x, dest_y] == tile_types.portal_red:
+                        self.engine.game_world.current_floor = 0  # Return to city
+                        self.engine.game_world.generate_floor()
+                        
+                        # Get party members
+                        party_members = [
+                            entity for entity in self.engine.game_map.actors
+                            if hasattr(entity, "ai") and hasattr(entity.ai, "in_party") and entity.ai.in_party
+                        ]
+                        
+                        # Place player and party in city
+                        center_x = self.engine.game_map.width // 2
+                        center_y = self.engine.game_map.height // 2
+                        self.entity.place(center_x, center_y, self.engine.game_map)
+                        
+                        # Place party members
+                        for i, member in enumerate(party_members):
+                            dx = [-1, 1, 0, 0][i % 4]
+                            dy = [0, 0, -1, 1][i % 4]
+                            member.place(center_x, center_y, self.engine.game_map)
+                        
+                        self.engine.message_log.add_message(
+                            "You step through the red portal and return to the city!", color.red
+                        )
+                        return
+            if not self.engine.game_map.tiles["walkable"][dest_x, dest_y]:
+                # Destination is blocked by a tile.
+                raise exceptions.Impossible("That way is blocked.")
+            if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+                # Destination is blocked by an entity.
+                raise exceptions.Impossible("That way is blocked.")
+            self.entity.move(self.dx, self.dy)
+        self.entity.fighter.ms_remainder -= cost
+        return
 
 
 
 class BumpAction(ActionWithDirection):
     def perform(self) -> None:
-        cost = 100
         if self.target_actor:
-            if self.entity.fighter.qn < cost:
-                self.engine.message_log.add_message(f"While you swinging, monsters go to you....")
-                self.entity.fighter.qn_remainder += 100
-                WaitAction.perform
-                return
-            else:
-                self.entity.fighter.qn -= cost
-                return MeleeAction(self.entity, self.dx, self.dy).perform()
+            return MeleeAction(self.entity, self.dx, self.dy).perform()
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()
 

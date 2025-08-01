@@ -85,7 +85,7 @@ class Entity:
         self.y += dy
 
 
-class Actor(Entity):
+class   Actor(Entity):
     def __init__(
         self,
         *,
