@@ -29,11 +29,12 @@ class Engine:
         self.tracked_monsters = set()  # Set to track killed monster types
         self.move_counter = 0
         self.last_player_position = (player.x, player.y)
-        
+
     def handle_enemy_turns(self) -> None:
         for entity in set(self.game_map.actors) - {self.player}:
             if entity.ai:
                 try:
+                    
                     entity.ai.perform()
                 except exceptions.Impossible:
                     pass  # Ignore impossible action exceptions from AI.

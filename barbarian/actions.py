@@ -33,6 +33,8 @@ class Action:
         This method must be overridden by Action subclasses.
         """
         raise NotImplementedError()
+    
+    
 
 
 class PickupAction(Action):
@@ -45,19 +47,11 @@ class PickupAction(Action):
         actor_location_x = self.entity.x
         actor_location_y = self.entity.y
         inventory = self.entity.inventory
-        cost = 50
         
-        
-        while self.entity.fighter.qn_remainder < cost:
-            print(f"qn: {self.entity.fighter.qn}, qn_remainder: {self.entity.fighter.qn_remainder}, cost: {cost}")
-            self.entity.fighter.qn_remainder += self.entity.fighter.qn
-            WaitAction.perform
         for item in self.engine.game_map.items:
             if actor_location_x == item.x and actor_location_y == item.y:
                 if len(inventory.items) >= inventory.capacity:
                     raise exceptions.Impossible("Your inventory is full.")
-                
-                self.entity.fighter.qn_remainder -= cost
                 self.engine.game_map.entities.remove(item)
                 item.parent = self.entity.inventory
                 inventory.items.append(item)
@@ -104,13 +98,7 @@ class EquipAction(Action):
 
     def perform(self) -> None:
 
-        cost = 100
-        while self.entity.fighter.qn_remainder < cost:
-            self.engine.message_log.add_message(f"While you equipping, monsters go to you....")
-            self.entity.fighter.qn_remainder += self.entity.fighter.qn
-            WaitAction.perform
         self.entity.equipment.toggle_equip(self.item)
-        self.entity.fighter.qn_remainder -= cost
         return
         
 
@@ -129,15 +117,8 @@ class TakeStairsAction(Action):
         """
         Take the stairs, if any exist at the entity's location.
         """
-        cost = 100
-        while self.entity.fighter.qn_remainder < cost:
-            self.engine.message_log.add_message(f"You not too fast to descend, monsters go to you....")
-            self.entity.fighter.qn_remainder += self.entity.fighter.qn
-            WaitAction.perform
-            
 
         if (self.entity.x, self.entity.y) in self.engine.game_map.downstairs_locations:
-            self.entity.fighter.qn_remainder -= cost
             self.engine.game_world.generate_floor()
             self.engine.message_log.add_message(
                 "You descend the staircase.", color.descend
@@ -174,15 +155,12 @@ class ActionWithDirection(Action):
         raise NotImplementedError()
 
 class MeleeAction(ActionWithDirection):
+    def __init__(self, entity, dx, dy):
+        super().__init__(entity, dx, dy)
+
 
     def perform(self) -> None:
-        cost = 100
-
-        while self.entity.fighter.qn_remainder < cost:
-            self.engine.message_log.add_message(f"While you swinging, monsters go to you....")
-            self.entity.fighter.qn_remainder += self.entity.fighter.qn
-            WaitAction.perform
-            
+    
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
@@ -214,7 +192,7 @@ class MeleeAction(ActionWithDirection):
             self.engine.message_log.add_message(
                 f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
             )
-        self.entity.fighter.qn_remainder -= cost
+        
         return
             
 
@@ -223,45 +201,40 @@ class RangedAttack(ActionWithDirection): #Наследуемся от базов
         super().__init__(entity, dx, dy)
 
     def perform(self) -> None:
-        cost = 200
+       
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
-        if self.entity.fighter.qn_remainder < cost:
-            self.engine.message_log.add_message(f"While you reloading, monsters go to you....")
-            self.entity.fighter.qn_remainder += self.entity.fighter.qn
-            WaitAction.perform
-            return
+        
+        if self.entity.equipment and self.entity.equipment.weapon and self.entity.equipment.weapon.equippable:
+            power_bonus = self.entity.equipment.weapon.equippable.get_power_bonus() # Получаем случайный бонус из оружия
         else:
-            if self.entity.equipment and self.entity.equipment.weapon and self.entity.equipment.weapon.equippable:
-                power_bonus = self.entity.equipment.weapon.equippable.get_power_bonus() # Получаем случайный бонус из оружия
-            else:
-                power_bonus = 0 #Если нет оружия, нет бонуса
-            damage = self.entity.fighter.power + power_bonus
-            pen = self.entity.fighter.pen
-            dice = dices.roll(1,20)
-            attack_desc = f"{self.entity.name.capitalize()} shoots {target.name}"
-            if self.entity is self.engine.player:
-                attack_color = color.player_atk
-            else:
-                attack_color = color.enemy_atk
+            power_bonus = 0 #Если нет оружия, нет бонуса
+        damage = self.entity.fighter.power + power_bonus
+        pen = self.entity.fighter.pen
+        dice = dices.roll(1,20)
+        attack_desc = f"{self.entity.name.capitalize()} shoots {target.name}"
+        if self.entity is self.engine.player:
+            attack_color = color.player_atk
+        else:
+            attack_color = color.enemy_atk
 
-            if dice == 20:
-                self.engine.message_log.add_message(
-                    f"{attack_desc} for crit {(damage*2)} hit points.[{dice}]", attack_color
-                )
-                target.fighter.hp -= (damage*2)
-            elif dice + pen >= target.fighter.defense:
-                self.engine.message_log.add_message(
-                    f"{attack_desc} for {damage} hit points.[{dice} + {pen}]", attack_color
-                )
-                target.fighter.hp -= damage
-            else:
-                self.engine.message_log.add_message(
-                    f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
-                )
-            self.entity.fighter.qn_remainder -= cost
-            return
+        if dice == 20:
+            self.engine.message_log.add_message(
+                f"{attack_desc} for crit {(damage*2)} hit points.[{dice}]", attack_color
+            )
+            target.fighter.hp -= (damage*2)
+        elif dice + pen >= target.fighter.defense:
+            self.engine.message_log.add_message(
+                f"{attack_desc} for {damage} hit points.[{dice} + {pen}]", attack_color
+            )
+            target.fighter.hp -= damage
+        else:
+            self.engine.message_log.add_message(
+                f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
+            )
+        
+        return
             
     
 class MovementAction(ActionWithDirection):
@@ -271,8 +244,6 @@ class MovementAction(ActionWithDirection):
         if not self.engine.game_map.in_bounds(dest_x, dest_y):
             # Destination is out of bounds.
             raise exceptions.Impossible("That way is blocked.")
-        
-        cost = 100
             
         if self.entity is self.engine.player:
             # Increment move counter
@@ -379,8 +350,8 @@ class MovementAction(ActionWithDirection):
             if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
                 # Destination is blocked by an entity.
                 raise exceptions.Impossible("That way is blocked.")
-            self.entity.move(self.dx, self.dy)
-        self.entity.fighter.ms_remainder -= cost
+        
+        self.entity.move(self.dx, self.dy)
         return
 
 

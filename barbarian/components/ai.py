@@ -14,6 +14,12 @@ if TYPE_CHECKING:
 
 
 class BaseAI(Action):
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+        self.cost = 0  # Значение по умолчанию
+        
+
+
     def perform(self) -> None:
         raise NotImplementedError()
 
@@ -45,6 +51,28 @@ class BaseAI(Action):
 
         # Convert from List[List[int]] to List[Tuple[int, int]].
         return [(index[0], index[1]) for index in path]
+    
+    def take_qturn(self) -> None: # Допустим, у вас есть такой метод
+        # Пополняем qn_remainder каждый ход
+        self.entity.fighter.qn_remainder += self.entity.fighter.qn
+            # Или, если максимального значения нет, то просто:
+
+    def take_mturn(self) -> None: # Допустим, у вас есть такой метод
+        # Пополняем qn_remainder каждый ход
+        self.entity.fighter.ms_remainder += self.entity.fighter.ms
+            # Или, если максимального значения нет, то просто:
+    
+    def can_move(self, cost) -> bool:
+        """Проверяет, достаточно ли qn_remainder для движения."""
+        if self.entity.fighter.ms_remainder >= cost:
+            return True
+        return False
+
+    def can_attack(self, cost) -> bool:
+        """Проверяет, достаточно ли qn_remainder для атаки."""
+        if self.entity.fighter.qn_remainder >= cost:
+            return True
+        return False
 
 
 class HostileEnemy(BaseAI):
@@ -56,7 +84,8 @@ class HostileEnemy(BaseAI):
             "friendly_npc": 0.5,  # Половинная агрессия к NPC
             "hostile_enemy": 0.0,  # Нет агрессии к другим врагам
         }
-
+        self._cooldown = 0
+    
     def set_aggression(self, target_type: str, value: float) -> None:
         """Установить уровень агрессии к определенному типу целей"""
         if value < 0.0 or value > 1.0:
@@ -102,28 +131,24 @@ class HostileEnemy(BaseAI):
         dy = closest_target.y - self.entity.y
         distance = max(abs(dx), abs(dy))
         if self.engine.game_map.visible[self.entity.x, self.entity.y]:
-            if self.entity.fighter.qn_remainder < MeleeAction.cost:
-                self.engine.message_log.add_message(f"While you equipping, monsters go to you....")
-                self.entity.fighter.qn_remainder += self.entity.fighter.qn
-                
-                return WaitAction(self.entity).perform
-                
-            elif self.entity.fighter.qn_remainder > MeleeAction.cost:
-                if distance <= 1:
-                    self.entity.fighter.qn_remainder -= MeleeAction.cost
+            if distance <= 1:
+                if self.can_attack(100):
+                    self.entity.fighter.qn_remainder -= 100
                     return MeleeAction(self.entity, dx, dy).perform()
-                self.path = self.get_path_to(closest_target.x, closest_target.y)
+                else:
+                    self.take_qturn()
+                    return WaitAction(self.entity)
+            self.path = self.get_path_to(closest_target.x, closest_target.y)
         if self.path:
-            if self.entity.fighter.qn_remainder < MovementAction.cost:
-                self.engine.message_log.add_message(f"While you equipping, monsters go to you....")
-                self.entity.fighter.qn_remainder += self.entity.fighter.qn
-                return WaitAction(self.entity).perform
-            if self.entity.fighter.ms_remainder >= MovementAction.cost:
+            if self.can_move(100):
+                self.entity.fighter.ms_remainder -= 100
                 dest_x, dest_y = self.path.pop(0)
-                self.entity.fighter.qn_remainder -= MovementAction.cost
                 return MovementAction(
                     self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
                 ).perform()
+            else:
+                self.take_mturn()
+                return WaitAction(self.entity)
         return WaitAction(self.entity).perform()
 
 class HostileRanged(HostileEnemy):
@@ -132,7 +157,8 @@ class HostileRanged(HostileEnemy):
         self.target_entity = None
         self.max_range = 6  # Максимальная дальность атаки
         self.min_range = 3
-        self.cooldown = 0  # Текущее время перезарядки       
+        self._qcooldown = 0  # Текущее время перезарядки     
+        self._mcooldown = 0  # Текущее время перезарядки    
         self.last_known_position: Optional[Tuple[int, int]] = None
     
     def get_path_to(self, dest_x: int, dest_y: int) -> List[Tuple[int, int]]:
@@ -170,14 +196,6 @@ class HostileRanged(HostileEnemy):
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y
         distance = max(abs(dx), abs(dy))  # Chebyshev distance
-
-        if self.cooldown > 0:
-            self.cooldown -= 1  # Уменьшаем перезарядку
-            self.engine.message_log.add_message(
-                            "Goblin have to reload...", color.white
-                        )
-            return WaitAction(self.entity).perform()  # Ждем
-
         if self.engine.game_map.known[self.entity.x, self.entity.y]:
             if distance < self.min_range:
                 #Пытаемся отойти от цели
@@ -185,28 +203,47 @@ class HostileRanged(HostileEnemy):
                 new_y = self.entity.y - dy
                 if self.engine.game_map.tiles["walkable"][new_x, new_y] and not self.engine.game_map.get_blocking_entity_at_location(new_x, new_y):
                     #Если клетка проходима и не заблокирована, двигаемся туда
-                    return MovementAction(self.entity, -dx, -dy).perform()
+                    if self.can_move(100) == True:
+                        print("  mcooldown вернул True, выполняем MovementAction")
+                        self.entity.fighter.qn_remainder -= 100
+                        return MovementAction(self.entity, -dx, -dy).perform()
+                    else:
+                        print("  mcooldown вернул False, выполняем WaitAction")
+                        self.take_mturn()
+                        return WaitAction(self.entity).perform()
                 else:
                     #Если отойти некуда, ждем
+                    print("  Некуда отойти, выполняем WaitAction")
                     return WaitAction(self.entity).perform()
             if distance <= self.max_range:
-                self.cooldown = 2
-                # Атакуем, если цель в пределах досягаемости
-                return MeleeAction(self.entity, dx, dy).perform()
+                if self.can_attack(200) == True:
+                    # Атакуем, если цель в пределах досягаемости
+                    self.entity.fighter.qn_remainder -= 200
+                    return MeleeAction(self.entity, dx, dy).perform()
+                else:
+                    self.take_qturn()
+                    return WaitAction(self.entity).perform()
             elif distance > self.max_range:
                 # Двигаемся ближе к цели
                 self.path = self.get_path_to(target.x, target.y)
                 if self.path: #Проверяем, что путь не пустой
                     dest_x, dest_y = self.path.pop(0)
-                    return MovementAction(
-                        self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-                    ).perform()
+                    if self.can_move(100) == True:
+                        self.entity.fighter.ms_remainder -= 100
+                        return MovementAction(
+                            self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                        ).perform()
+                    else:
+                        
+                        return WaitAction(self.entity).perform
         else: #Если не знаем ничего - ждём
             return WaitAction(self.entity).perform()
 
 class Player(BaseAI):
     def __init__(self, entity: Actor):
         super().__init__(entity)
+        self._qcooldown = 0
+        self._mcooldown = 0
         self.path: List[Tuple[int, int]] = []
 
     def perform(self) -> None:
@@ -217,15 +254,20 @@ class Player(BaseAI):
 
         if self.engine.game_map.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
-                return MeleeAction(self.entity, dx, dy).perform()
-
+                if self.qcooldown(100) == True:
+                    return MeleeAction(self.entity, dx, dy).perform()
+                else:
+                    return WaitAction(self.entity).perform()
             self.path = self.get_path_to(target.x, target.y)
 
         if self.path:
             dest_x, dest_y = self.path.pop(0)
-            return MovementAction(
-                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-            ).perform()
+            if self.mcooldown(100) == True:
+                return MovementAction(
+                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                ).perform()
+            else:
+                return WaitAction(self.entity).perform()
 
 class FriendlyNPC(BaseAI):
     def __init__(self, entity: Actor):
@@ -233,6 +275,7 @@ class FriendlyNPC(BaseAI):
         self.path: List[Tuple[int, int]] = []
         self.in_party = False
         self.current_target = None
+        self._cooldown = 0
 
     def toggle_party_membership(self) -> None:
         """Переключает статус членства NPC в группе"""
@@ -268,14 +311,22 @@ class FriendlyNPC(BaseAI):
             if closest_distance <= 1:  # Если враг рядом - атакуем
                 dx = closest_enemy.x - self.entity.x
                 dy = closest_enemy.y - self.entity.y
-                return MeleeAction(self.entity, dx, dy).perform()
+                if self.can_attack(100):
+                    return MeleeAction(self.entity, dx, dy).perform()
+                else:
+                    self.take_qturn
+                    return WaitAction(self.entity)  
             else:  # Иначе двигаемся к врагу
                 self.path = self.get_path_to(closest_enemy.x, closest_enemy.y)
                 if self.path:
-                    dest_x, dest_y = self.path.pop(0)
-                    return MovementAction(
-                        self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-                    ).perform()
+                    if self.can_move(100):
+                        dest_x, dest_y = self.path.pop(0)
+                        return MovementAction(
+                            self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                        ).perform()
+                    else:
+                        self.take_mturn()
+                        WaitAction(self.entity)
                     
         # Если нет врагов - следуем за игроком
         target = self.engine.player
@@ -285,10 +336,14 @@ class FriendlyNPC(BaseAI):
         if distance > 3:  # Держим дистанцию в 3 клетки
             self.path = self.get_path_to(target.x, target.y)
             if self.path:
-                dest_x, dest_y = self.path.pop(0)
-                return MovementAction(
-                    self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-                ).perform()
+                if self.can_move(100):
+                    dest_x, dest_y = self.path.pop(0)
+                    return MovementAction(
+                        self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+                    ).perform()
+                else:
+                    self.take_mturn()
+                    WaitAction(self.entity)
         return WaitAction(self.entity).perform()
 
 
@@ -302,7 +357,7 @@ class ConfusedEnemy(BaseAI):
         self, entity: Actor, previous_ai: Optional[BaseAI], turns_remaining: int
     ):
         super().__init__(entity)
-
+        self._cooldown = 0
         self.previous_ai = previous_ai
         self.turns_remaining = turns_remaining
 
@@ -332,7 +387,11 @@ class ConfusedEnemy(BaseAI):
 
             # The actor will either try to move or attack in the chosen random direction.
             # Its possible the actor will just bump into the wall, wasting a turn.
-            return BumpAction(self.entity, direction_x, direction_y,).perform()
+            if self.can_attack(100):
+                return BumpAction(self.entity, direction_x, direction_y,).perform()
+            else:
+                self.take_qturn
+                WaitAction(self.entity)
 
 class FearedAi(BaseAI):
     pass

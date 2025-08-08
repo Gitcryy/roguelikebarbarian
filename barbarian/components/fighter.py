@@ -140,8 +140,8 @@ class Fighter(BaseComponent):
 
     @ms_remainder.setter
     def ms_remainder(self, value: int) -> None:
-        """Устанавливает значение qn_remainder напрямую (обычно не требуется)."""
         self._ms_remainder = value
+        
 
 
     @property
@@ -156,7 +156,6 @@ class Fighter(BaseComponent):
 
     @qn_remainder.setter
     def qn_remainder(self, value: int) -> None:
-        """Устанавливает значение qn_remainder напрямую (обычно не требуется)."""
         self._qn_remainder = value
 
     @property
