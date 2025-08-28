@@ -6,11 +6,12 @@ from typing import TYPE_CHECKING
 
 from tcod.console import Console
 from tcod.map import compute_fov
-from components.ai import FriendlyNPC
+from components.ai import BaseAI
 import exceptions
 from message_log import MessageLog
 import render_functions
 from components.Dices import dices
+
 
 
 if TYPE_CHECKING:
@@ -30,11 +31,12 @@ class Engine:
         self.move_counter = 0
         self.last_player_position = (player.x, player.y)
 
+    
+
     def handle_enemy_turns(self) -> None:
         for entity in set(self.game_map.actors) - {self.player}:
             if entity.ai:
                 try:
-                    
                     entity.ai.perform()
                 except exceptions.Impossible:
                     pass  # Ignore impossible action exceptions from AI.
