@@ -34,6 +34,28 @@ class Action:
         """
         raise NotImplementedError()
     
+    def ptake_qturn(self) -> None: # Допустим, у вас есть такой метод
+        # Пополняем qn_remainder каждый ход
+        self.entity.fighter.qn_remainder += self.entity.fighter.qn
+            # Или, если максимального значения нет, то просто:
+
+    def ptake_mturn(self) -> None: # Допустим, у вас есть такой метод
+        # Пополняем qn_remainder каждый ход
+        self.entity.fighter.ms_remainder += self.entity.fighter.ms
+            # Или, если максимального значения нет, то просто:
+    
+    def pcan_move(self, cost) -> bool:
+        """Проверяет, достаточно ли qn_remainder для движения."""
+        if self.entity.fighter.ms_remainder >= cost:
+            return True
+        return False
+
+    def pcan_attack(self, cost) -> bool:
+        """Проверяет, достаточно ли qn_remainder для атаки."""
+        if self.entity.fighter.qn_remainder >= cost:
+            return True
+        return False
+    
     
 
 
@@ -160,7 +182,6 @@ class MeleeAction(ActionWithDirection):
 
 
     def perform(self) -> None:
-    
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
@@ -175,6 +196,27 @@ class MeleeAction(ActionWithDirection):
         attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
         if self.entity is self.engine.player:
             attack_color = color.player_atk
+            self.entity.fighter.qn_remainder += self.entity.fighter.qn
+            if self.entity.fighter.qn_remainder >= 100:
+                self.entity.fighter.qn_remainder -= 100
+                if dice == 20:
+                    self.engine.message_log.add_message(
+                        f"{attack_desc} for crit {(damage*2)} hit points.[{dice}]", attack_color
+                    )
+                    target.fighter.hp -= (damage*2)
+                elif dice + pen >= target.fighter.defense:
+                    self.engine.message_log.add_message(
+                        f"{attack_desc} for {damage} hit points.[{dice} + {pen}]", attack_color
+                    )
+                    target.fighter.hp -= damage
+                else:
+                    self.engine.message_log.add_message(
+                        f"{attack_desc} but does no damage.[{dice} + {pen}]", attack_color
+                    )
+                
+                return
+            else:                
+                return False
         else:
             attack_color = color.enemy_atk
 
@@ -246,7 +288,11 @@ class MovementAction(ActionWithDirection):
             raise exceptions.Impossible("That way is blocked.")
             
         if self.entity is self.engine.player:
-            # Increment move counter
+            self.entity.fighter.ms_remainder += self.entity.fighter.ms
+            if self.entity.fighter.ms_remainder >= 100:
+                self.entity.fighter.ms_remainder -= 100
+            else:                
+                return False# Increment move counter
             self.engine.move_counter += 1
             if self.engine.move_counter % 15 == 0:
                 self.entity.fighter.heal(1)
@@ -350,7 +396,10 @@ class MovementAction(ActionWithDirection):
             if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
                 # Destination is blocked by an entity.
                 raise exceptions.Impossible("That way is blocked.")
-        
+            self.entity.move(self.dx, self.dy)
+            return
+                
+                
         self.entity.move(self.dx, self.dy)
         return
 

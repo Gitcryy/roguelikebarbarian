@@ -336,13 +336,13 @@ class FriendlyNPC(BaseAI):
         if distance > 3:  # Держим дистанцию в 3 клетки
             self.path = self.get_path_to(target.x, target.y)
             if self.path:
+                self.take_mturn
                 if self.can_move(100):
                     dest_x, dest_y = self.path.pop(0)
                     return MovementAction(
                         self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
                     ).perform()
                 else:
-                    self.take_mturn()
                     WaitAction(self.entity)
         return WaitAction(self.entity).perform()
 
