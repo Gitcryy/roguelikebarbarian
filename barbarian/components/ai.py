@@ -333,7 +333,7 @@ class FriendlyNPC(BaseAI):
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y
         distance = max(abs(dx), abs(dy))
-        if distance > 3:  # Держим дистанцию в 3 клетки
+        if distance > 2:  # Держим дистанцию в 3 клетки
             self.path = self.get_path_to(target.x, target.y)
             if self.path:
                 self.take_mturn
