@@ -4,7 +4,10 @@ from components.equipment import Equipment
 from components.fighter import Fighter
 from components.inventory import Inventory
 from components.level import Level
-from entity import Actor, Item
+from entity import Actor, Item, Portal
+import game_map
+
+import color
 
 
 player = Actor(
@@ -303,6 +306,13 @@ leather_armor = Item(
 chain_mail = Item(
     char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
 )
+
+#portal1 = Portal(
+#    parent=game_map,
+#    x=10,
+#    y=10,
+#    target_floor=2
+#)
 
 
 MONSTER_GROUP_TEMPLATES = [

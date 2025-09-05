@@ -165,3 +165,79 @@ class Item(Entity):
 
         if self.equippable:
             self.equippable.parent = self
+
+class Usableentity(Entity):
+    def __init__(
+        self,
+        parent: Optional[GameMap] = None,
+        x: int = 0,
+        y: int = 0,
+        char: str = "?",
+        color: Tuple[int, int, int] = (255, 255, 255),
+        name: str = "<Unnamed>",
+        interaction_message: str = "You interact with the object.",
+        blocks_movement: bool = False,
+    ):
+        super().__init__(
+            parent=parent,
+            x=x,
+            y=y,
+            char=char,
+            color=color,
+            name=name,
+            blocks_movement=blocks_movement,
+            render_order=RenderOrder.CORPSE,  # Или другой подходящий порядок
+        )
+        self.interaction_message = interaction_message
+
+    def interact(self, player: Actor) -> None:
+        """Метод, вызываемый при взаимодействии с игроком"""
+        # Базовая реализация просто выводит сообщение
+        from message_log import MessageLog
+        self.gamemap.engine.message_log.add_message(self.interaction_message)
+        
+        # Здесь можно добавить любую логику:
+        # - изменение состояния объекта
+        # - добавление предметов в инвентарь
+        # - запуск диалога
+        # - изменение карты и т.д.
+    
+class Portal(Usableentity):
+    def __init__(
+        self,
+        parent: Optional[Usableentity] = None,
+        x: int = 0,
+        y: int = 0,
+        target_floor: int = 1,
+    ):
+        super().__init__(
+            parent=parent,
+            x=x,
+            y=y,
+            char="0",
+            color=(0, 0, 255),  # Синий цвет
+            name="Portal to the second floor",
+            interaction_message="You step through the blue portal!",
+            blocks_movement=False,
+            
+        )
+        self.target_floor = target_floor
+
+    @property
+    def activated_or_not(self) -> bool:
+        """Returns True as long as this actor can perform actions."""
+        return bool(self.entity)
+
+    def interact(self, player: Actor) -> None:
+        """Переопределяем метод для реализации перехода между уровнями"""
+        super().interact(player)  # Выводим базовое сообщение
+        
+        # Здесь должна быть логика перехода на другой этаж
+        # Например:
+        if hasattr(self.gamemap.engine, 'game_world'):
+            self.gamemap.engine.game_world.current_floor = self.target_floor
+            self.gamemap.engine.game_world.generate_floor()
+            # Размещаем игрока на новом уровне
+            # (нужно адаптировать под вашу систему генерации уровней)
+
+    pass

@@ -8,7 +8,7 @@ from components.Dices import dices
 from components import equipment
 if TYPE_CHECKING:
     from engine import Engine
-    from entity import Actor, Entity, Item
+    from entity import Actor, Entity, Item, Usableentity
 
 
 
@@ -426,3 +426,21 @@ class DialogueAction(ActionWithDirection):
             target.ai.toggle_party_membership()
         else:
             raise exceptions.Impossible("You can only talk to friendly NPCs nearby.")
+
+class InteractAction(ActionWithDirection):
+    def perform(self) -> None:
+        dest_x, dest_y = self.dest_xy
+        
+        # Проверяем, есть ли сущности в целевой клетке
+        for entity in self.engine.game_map.entities:
+            if entity.x == dest_x and entity.y == dest_y:
+                # Проверяем, является ли сущность взаимодействуемой
+                if isinstance(entity, Usableentity):
+                    entity.interact(self.entity)  # Вызываем метод взаимодействия
+                    return
+                else:
+                    # Можно добавить сообщение, что с этой сущностью нельзя взаимодействовать
+                    raise exceptions.Impossible(f"You cannot interact with {entity.name}.")
+        
+        # Если в клетке ничего нет или ничего нельзя использовать
+        raise exceptions.Impossible("There is nothing to interact with here.")

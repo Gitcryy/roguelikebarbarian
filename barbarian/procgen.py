@@ -315,7 +315,7 @@ def generate_dungeon(
     return dungeon
 
 def generate_city(
-    max_rooms: int,
+    max_rooms: int, 
     room_min_size: int,
     room_max_size: int,
     map_width: int,

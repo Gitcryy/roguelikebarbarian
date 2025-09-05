@@ -10,6 +10,7 @@ from actions import (
     DialogueAction,
     PickupAction,
     WaitAction,
+    InteractAction,
 )
 import color
 import exceptions
@@ -553,6 +554,16 @@ class MainGameEventHandler(EventHandler):
                     xy[1] - self.engine.player.y,
                 )
             )
+        elif key == tcod.event.K_e:
+            return SingleRangedAttackHandler(
+                self.engine,
+                callback= lambda xy:InteractAction(
+                    self.engine.player,
+                    xy[0] - self.engine.player.x,
+                    xy[1] - self.engine.player.y,
+                )
+            )
+        
         elif key in WAIT_KEYS:
             action = WaitAction(player)
 
