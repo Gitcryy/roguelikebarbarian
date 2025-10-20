@@ -1,0 +1,331 @@
+from components.ai import HostileEnemy, FriendlyNPC, Player, HostileRanged
+from components import consumable, equippable
+from components.equipment import Equipment
+from components.fighter import Fighter
+from components.inventory import Inventory
+from components.level import Level
+from entity import Actor, Item, Portal
+import game_map
+
+import color
+
+
+player = Actor(
+    char="@",
+    color=(255, 255, 255),
+    name="Player",
+    ai_cls=Player,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 10000000, 
+                    base_ms=100, 
+                    base_qn=100,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=26),
+    level=Level(level_up_base=5),
+)
+npc = Actor(
+    char="@",
+    color=(173, 255, 47),
+    name="NPC",
+    ai_cls=FriendlyNPC,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=100, 
+                    base_qn=100,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=5),
+)
+
+"tier 9"
+gob = Actor(
+    char="g",
+    color=(112,255,93),
+    name="Goblin",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=100, 
+                    base_qn=100,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=6),
+)
+gobf=Actor(
+    char="f",
+    color=(84,255,88),
+    name="Goblin Fighter",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=50, 
+                    base_qn=100,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=7),
+)
+goba=Actor(
+    char="a",
+    color=(84,255,88),
+    name="Goblin Archer",
+    ai_cls=HostileRanged,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=50, 
+                    base_qn=100,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=7),
+)
+skel=Actor(
+    char="s",
+    color=(47,50,54),
+    name="Skeleton",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=100, 
+                    base_qn=1,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=6),
+)
+"tier 8"
+death=Actor(
+    char="d",
+    color=(192,128,129),
+    name="Death Fiend",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=100, 
+                    base_qn=1,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=10),
+)
+
+orc = Actor(
+    char="o",
+    color=(63, 127, 63),
+    name="Orc",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=100, 
+                    base_qn=1,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=8),
+)
+troll = Actor(
+    char="T",
+    color=(0, 127, 0),
+    name="Troll",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=100, 
+                    base_qn=1,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=30),
+)
+boss = Actor(
+    char="B",
+    color=(255, 0, 0),
+    name="Boss",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=3000000,
+                    mp=0, 
+                    base_defense=1000,
+                    base_mdef=0, 
+                    base_power=2, 
+                    base_mpow= 0,
+                    base_pen = 0, 
+                    base_ms=100, 
+                    base_qn=1,
+                    magic_qn=0,
+                    mental=0,
+                    slots=0,
+                    holy=0,
+                    luck=0,
+                    equip=0,
+                    ),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=1000),
+)
+
+confusion_scroll = Item(
+    char="~",
+    color=(207, 63, 255),
+    name="Confusion Scroll",
+    consumable=consumable.ConfusionConsumable(number_of_turns=10),
+)
+fireball_scroll = Item(
+    char="~",
+    color=(255, 0, 0),
+    name="Fireball Scroll",
+    consumable=consumable.FireballDamageConsumable(damage=16, radius=3, pen=16),
+)
+health_potion = Item(
+    char="!",
+    color=(127, 0, 255),
+    name="Health Potion",
+    consumable=consumable.HealingConsumable(amount=4),
+)
+lightning_scroll = Item(
+    char="~",
+    color=(255, 255, 0),
+    name="Lightning Scroll",
+    consumable=consumable.LightningDamageConsumable(damage=30, maximum_range=5, pen = 20),
+)
+
+dagger = Item(
+    char="/", color=(0, 191, 255), name="Dagger", equippable=equippable.Dagger()
+)
+
+sword = Item(char="/", color=(0, 191, 255), name="Sword", equippable=equippable.Sword())
+
+leather_armor = Item(
+    char="[",
+    color=(139, 69, 19),
+    name="Leather Armor",
+    equippable=equippable.LeatherArmor(),
+)
+
+chain_mail = Item(
+    char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
+)
+
+#portal1 = Portal(
+#    parent=game_map,
+#    x=10,
+#    y=10,
+#    target_floor=2
+#)
+
+
+MONSTER_GROUP_TEMPLATES = [
+    {
+        "name": "goba3",
+        "members": [goba, troll, boss],
+    },
+    {
+        "name": "troll2",
+        "members": [troll, troll],
+    },
+    {
+        "name": "gotro",
+        "members": [goba, troll],
+    },
+]
