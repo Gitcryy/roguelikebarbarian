@@ -36,21 +36,26 @@ class Fighter(BaseComponent):
         self.base_pen = base_pen
         self.base_defense = base_defense
         self.base_power = base_power
+        
         self.base_qn = base_qn
         self.base_ms = base_ms
         self._qn_remainder = 0
         self._ms_remainder = 0  # Остаток скорости
+        
         self.max_mp = mp
         self._mp = mp
         self.base_mdef = base_mdef
         self.base_mpow = base_mpow
         self.magic_qn = magic_qn 
+        
         self.max_mental = mental #влияет на страх для перехода в режим страха
         self._mental = mental
-        self.max_slots = slots #слоты для эссенций
-        self._slots = slots
+        
         self.max_holy = holy
         self._holy = holy
+        
+        self.max_slots = slots #слоты для эссенций
+        self._slots = slots
         self._luck = luck
         self._equip = equip #считает класс брони вцелом
 

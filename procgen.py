@@ -378,9 +378,6 @@ def generate_dungeon(
         # Не удалось найти подходящее место за max_attempts
         return None
 
-
-
-    
     # Размещаем игрока в проходимой области
     player_x, player_y = find_valid_position()
     player.place(player_x, player_y, dungeon)

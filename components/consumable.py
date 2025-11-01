@@ -4,8 +4,10 @@ from typing import Optional, TYPE_CHECKING
 import random as r
 import actions
 import color
+import actions
 import components.ai
 import components.inventory
+import engine
 from components.base_component import BaseComponent
 from exceptions import Impossible
 from input_handlers import (
@@ -130,9 +132,11 @@ class HealingConsumable(Consumable):
                 color.health_recovered,
             )
             self.consume()
+            for _ in range(5):
+                actions.WaitAction(action.entity)
+                engine.Engine.handle_enemy_turns(self.engine)
         else:
             raise Impossible(f"Your health is already full.")
-
 
 class LightningDamageConsumable(Consumable):
     def __init__(self, damage: int, maximum_range: int,pen:int):
